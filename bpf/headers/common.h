@@ -13,5 +13,9 @@
 #define PAGE_SHIFT 12
 #endif
 
+#define EVENT_GPU_KERNEL_LAUNCH 1
+#define EVENT_GPU_MALLOC 2
+#define EVENT_GPU_MEMCPY 3
+
 #endif /* __COMMON_H__ */
 
