@@ -45,6 +45,7 @@ struct
 
 
 const struct gpu_kernel_launch_event_t *unused __attribute__((unused));
+const struct gpu_memalloc_event_t *unused2 __attribute__((unused));
 
 SEC("uprobe/cuLaunchKernel")
 int BPF_KPROBE(handle_cuLaunchkernel,

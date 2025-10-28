@@ -31,6 +31,16 @@ type GpuprintGpuKernelLaunchEventT struct {
 	TotalThreads uint64
 }
 
+type GpuprintGpuMemallocEventT struct {
+	_        structs.HostLayout
+	Flag     uint8
+	Pad      [3]uint8
+	Pid      uint32
+	Comm     [150]uint8
+	_        [2]byte
+	ByteSize uint64
+}
+
 // LoadGpuprint returns the embedded CollectionSpec for Gpuprint.
 func LoadGpuprint() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_GpuprintBytes)
@@ -74,6 +84,7 @@ type GpuprintSpecs struct {
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintProgramSpecs struct {
 	HandleCuLaunchkernel *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc     *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
 }
 
 // GpuprintMapSpecs contains maps before they are loaded into the kernel.
@@ -87,7 +98,8 @@ type GpuprintMapSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintVariableSpecs struct {
-	Unused *ebpf.VariableSpec `ebpf:"unused"`
+	Unused  *ebpf.VariableSpec `ebpf:"unused"`
+	Unused2 *ebpf.VariableSpec `ebpf:"unused2"`
 }
 
 // GpuprintObjects contains all objects after they have been loaded into the kernel.
@@ -123,7 +135,8 @@ func (m *GpuprintMaps) Close() error {
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintVariables struct {
-	Unused *ebpf.Variable `ebpf:"unused"`
+	Unused  *ebpf.Variable `ebpf:"unused"`
+	Unused2 *ebpf.Variable `ebpf:"unused2"`
 }
 
 // GpuprintPrograms contains all programs after they have been loaded into the kernel.
@@ -131,11 +144,13 @@ type GpuprintVariables struct {
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintPrograms struct {
 	HandleCuLaunchkernel *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc     *ebpf.Program `ebpf:"handle_cuMemAlloc"`
 }
 
 func (p *GpuprintPrograms) Close() error {
 	return _GpuprintClose(
 		p.HandleCuLaunchkernel,
+		p.HandleCuMemAlloc,
 	)
 }
 
