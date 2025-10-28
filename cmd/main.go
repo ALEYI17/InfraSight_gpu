@@ -43,6 +43,14 @@ func main(){
         logger.Info("GPU Event received",
             zap.Uint32("pid", e.Pid),
             zap.String("comm", string(e.Comm[:])),
+            zap.Uint32("blockx", e.Blockx),
+            zap.Uint32("blocky", e.Blocky),
+            zap.Uint32("blockz", e.Blockz),
+            zap.Uint32("gridx", e.Gridx),
+            zap.Uint32("gridy", e.Gridy),
+            zap.Uint32("gridz", e.Gridz),
+            zap.Uint64("threadsblock",e.ThreadsBlock),
+            zap.Uint64("totalblocks",e.TotalBlocks),
             zap.Any("threads", e.TotalThreads))
     }
   }

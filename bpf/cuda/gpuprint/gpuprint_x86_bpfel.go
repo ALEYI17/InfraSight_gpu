@@ -13,11 +13,19 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type GpuprintGpuEventT struct {
+type GpuprintGpuKernelLaunchEventT struct {
 	_            structs.HostLayout
+	Flag         uint8
+	Pad          [3]uint8
 	Pid          uint32
 	Comm         [150]uint8
-	_            [6]byte
+	_            [2]byte
+	Gridx        uint32
+	Gridy        uint32
+	Gridz        uint32
+	Blockx       uint32
+	Blocky       uint32
+	Blockz       uint32
 	TotalBlocks  uint64
 	ThreadsBlock uint64
 	TotalThreads uint64
@@ -65,7 +73,7 @@ type GpuprintSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintProgramSpecs struct {
-	HandleCudaLaunchkernel *ebpf.ProgramSpec `ebpf:"handle_cuda_launchkernel"`
+	HandleCuLaunchkernel *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
 }
 
 // GpuprintMapSpecs contains maps before they are loaded into the kernel.
@@ -122,12 +130,12 @@ type GpuprintVariables struct {
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintPrograms struct {
-	HandleCudaLaunchkernel *ebpf.Program `ebpf:"handle_cuda_launchkernel"`
+	HandleCuLaunchkernel *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
 }
 
 func (p *GpuprintPrograms) Close() error {
 	return _GpuprintClose(
-		p.HandleCudaLaunchkernel,
+		p.HandleCuLaunchkernel,
 	)
 }
 

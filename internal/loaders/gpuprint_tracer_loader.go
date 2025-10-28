@@ -38,14 +38,14 @@ func NewGpuprinterLoader() (*GpuprintLoader, error){
     Objs: &objs,
   }
 
-  ex,err := link.OpenExecutable("/usr/local/cuda-13.0/targets/x86_64-linux/lib/libcudart.so")
+  ex,err := link.OpenExecutable("/usr/lib/wsl/drivers/nvmdi.inf_amd64_f088ae99b5a2f5fd/libcuda.so.1.1")
   if err != nil {
     logger.Error("error", zap.Error(err))
     gput.Close()
     return nil, err
   }
 
-  up,err := ex.Uprobe("cudaLaunchKernel", objs.HandleCudaLaunchkernel , nil)
+  up,err := ex.Uprobe("cuLaunchKernel", objs.HandleCuLaunchkernel , nil)
   if err != nil {
     logger.Error("error", zap.Error(err))
     gput.Close()
