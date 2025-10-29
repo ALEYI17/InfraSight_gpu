@@ -37,6 +37,17 @@ struct gpu_memalloc_event_t{
   size_t byte_size;
 };
 
+struct gpu_memcpy_event_t{
+  __u8 flag;
+  u8 _pad[3];
+
+  __u32 pid;
+  u8 comm[TASK_COMM_SIZE];
+
+  size_t byte_size;
+  u8 kind;
+};
+
 struct
 {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
@@ -46,6 +57,7 @@ struct
 
 const struct gpu_kernel_launch_event_t *unused __attribute__((unused));
 const struct gpu_memalloc_event_t *unused2 __attribute__((unused));
+const struct gpu_memcpy_event_t *unused3 __attribute__((unused));
 
 SEC("uprobe/cuLaunchKernel")
 int BPF_KPROBE(handle_cuLaunchkernel,
@@ -105,3 +117,97 @@ int BPF_KPROBE(handle_cuMemAlloc, void **devptr, size_t bytesize){
 
   return 0;
 }
+
+
+SEC("uprobe/cuMemcpyHtoD")
+int BPF_KPROBE(handle_cuMemcpy_htod, void **dst, const void *src, size_t bytesize){
+  __u32 pid = bpf_get_current_pid_tgid() >> 32;
+
+  struct gpu_memcpy_event_t *e;
+  e = bpf_ringbuf_reserve(&gpu_ringbuf,sizeof(struct gpu_memcpy_event_t),0);
+  if (!e) return 0;
+
+  e->pid = pid;
+
+  e->flag = EVENT_GPU_MEMCPY;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  e->byte_size = bytesize;
+
+  e->kind = DIR_HTOD;
+
+  bpf_ringbuf_submit(e,0);
+
+  return 0;
+}
+
+SEC("uprobe/cuMemcpyDtoH")
+int BPF_KPROBE(handle_cuMemcpy_dtoh, void *dst, void **src, size_t bytesize){
+  __u32 pid = bpf_get_current_pid_tgid() >> 32;
+
+  struct gpu_memcpy_event_t *e;
+  e = bpf_ringbuf_reserve(&gpu_ringbuf,sizeof(struct gpu_memcpy_event_t),0);
+  if (!e) return 0;
+
+  e->pid = pid;
+
+  e->flag = EVENT_GPU_MEMCPY;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  e->byte_size = bytesize;
+
+  e->kind = DIR_DTOH;
+
+  bpf_ringbuf_submit(e,0);
+
+  return 0;
+}
+
+SEC("uprobe/cuMemcpyHtoDAsync")
+int BPF_KPROBE(handle_cuMemcpy_htod_async, void **dst, const void *src, size_t bytesize, cudaStream_t hStream){
+  __u32 pid = bpf_get_current_pid_tgid() >> 32;
+
+  struct gpu_memcpy_event_t *e;
+  e = bpf_ringbuf_reserve(&gpu_ringbuf,sizeof(struct gpu_memcpy_event_t),0);
+  if (!e) return 0;
+
+  e->pid = pid;
+
+  e->flag = EVENT_GPU_MEMCPY;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  e->byte_size = bytesize;
+
+  e->kind = DIR_HTOD;
+
+  bpf_ringbuf_submit(e,0);
+
+  return 0;
+}
+
+SEC("uprobe/cuMemcpyDtoHAsync")
+int BPF_KPROBE(handle_cuMemcpy_dtohAsync, void *dst, void **src, size_t bytesize, cudaStream_t hStream){
+  __u32 pid = bpf_get_current_pid_tgid() >> 32;
+
+  struct gpu_memcpy_event_t *e;
+  e = bpf_ringbuf_reserve(&gpu_ringbuf,sizeof(struct gpu_memcpy_event_t),0);
+  if (!e) return 0;
+
+  e->pid = pid;
+
+  e->flag = EVENT_GPU_MEMCPY;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  e->byte_size = bytesize;
+
+  e->kind = DIR_DTOH;
+
+  bpf_ringbuf_submit(e,0);
+
+  return 0;
+}
+

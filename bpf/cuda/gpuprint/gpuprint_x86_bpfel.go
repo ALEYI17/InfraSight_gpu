@@ -41,6 +41,18 @@ type GpuprintGpuMemallocEventT struct {
 	ByteSize uint64
 }
 
+type GpuprintGpuMemcpyEventT struct {
+	_        structs.HostLayout
+	Flag     uint8
+	Pad      [3]uint8
+	Pid      uint32
+	Comm     [150]uint8
+	_        [2]byte
+	ByteSize uint64
+	Kind     uint8
+	_        [7]byte
+}
+
 // LoadGpuprint returns the embedded CollectionSpec for Gpuprint.
 func LoadGpuprint() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_GpuprintBytes)
@@ -83,8 +95,12 @@ type GpuprintSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintProgramSpecs struct {
-	HandleCuLaunchkernel *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
-	HandleCuMemAlloc     *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
+	HandleCuLaunchkernel    *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc        *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
+	HandleCuMemcpyDtoh      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtoh"`
+	HandleCuMemcpyDtohAsync *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtohAsync"`
+	HandleCuMemcpyHtod      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod"`
+	HandleCuMemcpyHtodAsync *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod_async"`
 }
 
 // GpuprintMapSpecs contains maps before they are loaded into the kernel.
@@ -100,6 +116,7 @@ type GpuprintMapSpecs struct {
 type GpuprintVariableSpecs struct {
 	Unused  *ebpf.VariableSpec `ebpf:"unused"`
 	Unused2 *ebpf.VariableSpec `ebpf:"unused2"`
+	Unused3 *ebpf.VariableSpec `ebpf:"unused3"`
 }
 
 // GpuprintObjects contains all objects after they have been loaded into the kernel.
@@ -137,20 +154,29 @@ func (m *GpuprintMaps) Close() error {
 type GpuprintVariables struct {
 	Unused  *ebpf.Variable `ebpf:"unused"`
 	Unused2 *ebpf.Variable `ebpf:"unused2"`
+	Unused3 *ebpf.Variable `ebpf:"unused3"`
 }
 
 // GpuprintPrograms contains all programs after they have been loaded into the kernel.
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintPrograms struct {
-	HandleCuLaunchkernel *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
-	HandleCuMemAlloc     *ebpf.Program `ebpf:"handle_cuMemAlloc"`
+	HandleCuLaunchkernel    *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc        *ebpf.Program `ebpf:"handle_cuMemAlloc"`
+	HandleCuMemcpyDtoh      *ebpf.Program `ebpf:"handle_cuMemcpy_dtoh"`
+	HandleCuMemcpyDtohAsync *ebpf.Program `ebpf:"handle_cuMemcpy_dtohAsync"`
+	HandleCuMemcpyHtod      *ebpf.Program `ebpf:"handle_cuMemcpy_htod"`
+	HandleCuMemcpyHtodAsync *ebpf.Program `ebpf:"handle_cuMemcpy_htod_async"`
 }
 
 func (p *GpuprintPrograms) Close() error {
 	return _GpuprintClose(
 		p.HandleCuLaunchkernel,
 		p.HandleCuMemAlloc,
+		p.HandleCuMemcpyDtoh,
+		p.HandleCuMemcpyDtohAsync,
+		p.HandleCuMemcpyHtod,
+		p.HandleCuMemcpyHtodAsync,
 	)
 }
 
