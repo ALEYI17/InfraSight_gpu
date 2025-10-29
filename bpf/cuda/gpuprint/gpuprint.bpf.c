@@ -48,6 +48,24 @@ struct gpu_memcpy_event_t{
   u8 kind;
 };
 
+struct gpu_stream_event_t{
+  __u8 flag;
+  u8 _pad[3];
+
+  __u32 pid;
+  u8 comm[TASK_COMM_SIZE];
+  __u64 start_time;
+  __u64 end_time;
+  __u64 delta_ns;
+};
+
+struct{
+  __uint(type, BPF_MAP_TYPE_HASH);
+  __type(key, __u64);
+  __type(value, __u64);
+  __uint(max_entries, 1024);
+} start_events_stream SEC(".maps");
+
 struct
 {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
@@ -58,6 +76,7 @@ struct
 const struct gpu_kernel_launch_event_t *unused __attribute__((unused));
 const struct gpu_memalloc_event_t *unused2 __attribute__((unused));
 const struct gpu_memcpy_event_t *unused3 __attribute__((unused));
+const struct gpu_stream_event_t *unused4 __attribute__((unused));
 
 SEC("uprobe/cuLaunchKernel")
 int BPF_KPROBE(handle_cuLaunchkernel,
@@ -207,6 +226,50 @@ int BPF_KPROBE(handle_cuMemcpy_dtohAsync, void *dst, void **src, size_t bytesize
   e->kind = DIR_DTOH;
 
   bpf_ringbuf_submit(e,0);
+
+  return 0;
+}
+
+SEC("uprobe/cuStreamSynchronize")
+int BPF_KPROBE(handle_cuStreamSync, cudaStream_t hStream){
+
+  __u64 id = bpf_get_current_pid_tgid(); 
+  __u64 ts = bpf_ktime_get_ns();
+
+  bpf_map_update_elem(&start_events_stream,&id,&ts,BPF_ANY);
+  return 0;
+}
+
+SEC("uretprobe/cuStreamSynchronize")
+int BPF_KRETPROBE(handle_cuStreamSynchronize_ret){
+
+  struct gpu_stream_event_t *e;
+
+  __u64 id = bpf_get_current_pid_tgid();
+
+  __u64 *tsp = bpf_map_lookup_elem(&start_events_stream, &id);
+  if (!tsp) {
+      return 0;
+  }
+
+  e = bpf_ringbuf_reserve(&gpu_ringbuf, sizeof(*e), 0);
+    if (!e) return 0;
+  
+  e->pid = id >> 32;
+
+  e->start_time = *tsp;
+
+  e->end_time = bpf_ktime_get_ns();
+
+  e->delta_ns =  e->end_time - e->start_time;
+
+  e->flag = EVENT_GPU_STREAM_SYNC;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  bpf_map_delete_elem(&start_events_stream, &id);
+
+  bpf_ringbuf_submit(e, 0);
 
   return 0;
 }

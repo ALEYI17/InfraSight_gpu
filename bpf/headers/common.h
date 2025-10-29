@@ -16,6 +16,8 @@
 #define EVENT_GPU_KERNEL_LAUNCH 1
 #define EVENT_GPU_MALLOC 2
 #define EVENT_GPU_MEMCPY 3
+#define EVENT_GPU_STREAM_SYNC 4
+
 #define DIR_HTOD 0
 #define DIR_DTOH 1
 #endif /* __COMMON_H__ */

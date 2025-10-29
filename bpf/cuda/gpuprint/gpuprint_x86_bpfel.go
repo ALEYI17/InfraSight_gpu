@@ -53,6 +53,18 @@ type GpuprintGpuMemcpyEventT struct {
 	_        [7]byte
 }
 
+type GpuprintGpuStreamEventT struct {
+	_         structs.HostLayout
+	Flag      uint8
+	Pad       [3]uint8
+	Pid       uint32
+	Comm      [150]uint8
+	_         [2]byte
+	StartTime uint64
+	EndTime   uint64
+	DeltaNs   uint64
+}
+
 // LoadGpuprint returns the embedded CollectionSpec for Gpuprint.
 func LoadGpuprint() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_GpuprintBytes)
@@ -95,19 +107,22 @@ type GpuprintSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintProgramSpecs struct {
-	HandleCuLaunchkernel    *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
-	HandleCuMemAlloc        *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
-	HandleCuMemcpyDtoh      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtoh"`
-	HandleCuMemcpyDtohAsync *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtohAsync"`
-	HandleCuMemcpyHtod      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod"`
-	HandleCuMemcpyHtodAsync *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod_async"`
+	HandleCuLaunchkernel         *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc             *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
+	HandleCuMemcpyDtoh           *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtoh"`
+	HandleCuMemcpyDtohAsync      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtohAsync"`
+	HandleCuMemcpyHtod           *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod"`
+	HandleCuMemcpyHtodAsync      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod_async"`
+	HandleCuStreamSync           *ebpf.ProgramSpec `ebpf:"handle_cuStreamSync"`
+	HandleCuStreamSynchronizeRet *ebpf.ProgramSpec `ebpf:"handle_cuStreamSynchronize_ret"`
 }
 
 // GpuprintMapSpecs contains maps before they are loaded into the kernel.
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintMapSpecs struct {
-	GpuRingbuf *ebpf.MapSpec `ebpf:"gpu_ringbuf"`
+	GpuRingbuf        *ebpf.MapSpec `ebpf:"gpu_ringbuf"`
+	StartEventsStream *ebpf.MapSpec `ebpf:"start_events_stream"`
 }
 
 // GpuprintVariableSpecs contains global variables before they are loaded into the kernel.
@@ -117,6 +132,7 @@ type GpuprintVariableSpecs struct {
 	Unused  *ebpf.VariableSpec `ebpf:"unused"`
 	Unused2 *ebpf.VariableSpec `ebpf:"unused2"`
 	Unused3 *ebpf.VariableSpec `ebpf:"unused3"`
+	Unused4 *ebpf.VariableSpec `ebpf:"unused4"`
 }
 
 // GpuprintObjects contains all objects after they have been loaded into the kernel.
@@ -139,12 +155,14 @@ func (o *GpuprintObjects) Close() error {
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintMaps struct {
-	GpuRingbuf *ebpf.Map `ebpf:"gpu_ringbuf"`
+	GpuRingbuf        *ebpf.Map `ebpf:"gpu_ringbuf"`
+	StartEventsStream *ebpf.Map `ebpf:"start_events_stream"`
 }
 
 func (m *GpuprintMaps) Close() error {
 	return _GpuprintClose(
 		m.GpuRingbuf,
+		m.StartEventsStream,
 	)
 }
 
@@ -155,18 +173,21 @@ type GpuprintVariables struct {
 	Unused  *ebpf.Variable `ebpf:"unused"`
 	Unused2 *ebpf.Variable `ebpf:"unused2"`
 	Unused3 *ebpf.Variable `ebpf:"unused3"`
+	Unused4 *ebpf.Variable `ebpf:"unused4"`
 }
 
 // GpuprintPrograms contains all programs after they have been loaded into the kernel.
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintPrograms struct {
-	HandleCuLaunchkernel    *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
-	HandleCuMemAlloc        *ebpf.Program `ebpf:"handle_cuMemAlloc"`
-	HandleCuMemcpyDtoh      *ebpf.Program `ebpf:"handle_cuMemcpy_dtoh"`
-	HandleCuMemcpyDtohAsync *ebpf.Program `ebpf:"handle_cuMemcpy_dtohAsync"`
-	HandleCuMemcpyHtod      *ebpf.Program `ebpf:"handle_cuMemcpy_htod"`
-	HandleCuMemcpyHtodAsync *ebpf.Program `ebpf:"handle_cuMemcpy_htod_async"`
+	HandleCuLaunchkernel         *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
+	HandleCuMemAlloc             *ebpf.Program `ebpf:"handle_cuMemAlloc"`
+	HandleCuMemcpyDtoh           *ebpf.Program `ebpf:"handle_cuMemcpy_dtoh"`
+	HandleCuMemcpyDtohAsync      *ebpf.Program `ebpf:"handle_cuMemcpy_dtohAsync"`
+	HandleCuMemcpyHtod           *ebpf.Program `ebpf:"handle_cuMemcpy_htod"`
+	HandleCuMemcpyHtodAsync      *ebpf.Program `ebpf:"handle_cuMemcpy_htod_async"`
+	HandleCuStreamSync           *ebpf.Program `ebpf:"handle_cuStreamSync"`
+	HandleCuStreamSynchronizeRet *ebpf.Program `ebpf:"handle_cuStreamSynchronize_ret"`
 }
 
 func (p *GpuprintPrograms) Close() error {
@@ -177,6 +198,8 @@ func (p *GpuprintPrograms) Close() error {
 		p.HandleCuMemcpyDtohAsync,
 		p.HandleCuMemcpyHtod,
 		p.HandleCuMemcpyHtodAsync,
+		p.HandleCuStreamSync,
+		p.HandleCuStreamSynchronizeRet,
 	)
 }
 

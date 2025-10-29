@@ -42,7 +42,6 @@ func main(){
         logger.Info("Context cancelled, shutting down gracefully...")
         return
     case ev := <-events:
-        logger.Info("get event")
         switch e := ev.(type){
           case gpuprint.GpuprintGpuKernelLaunchEventT:
             logger.Info("GPU Event received",
@@ -68,6 +67,11 @@ func main(){
               zap.String("comm", unix.ByteSliceToString(e.Comm[:])),
               zap.Uint64("Bytes", e.ByteSize),
               zap.Uint8("kind", e.Kind))
+          case gpuprint.GpuprintGpuStreamEventT:
+            logger.Info("Gpu event received", 
+              zap.Uint32("pid", e.Pid),
+              zap.String("comm", unix.ByteSliceToString(e.Comm[:])),
+              zap.Uint64("delta", e.DeltaNs))
         }
         
     }

@@ -47,26 +47,44 @@ func NewGpuprinterLoader() (*GpuprintLoader, error){
     return nil, err
   }
 
-  functions := []struct {
-        name string
-        prog *ebpf.Program
-    }{
-        {"cuLaunchKernel", objs.HandleCuLaunchkernel},
-        {"cuMemAlloc_v2", objs.HandleCuMemAlloc},
-        {"cuMemcpyHtoD_v2", objs.HandleCuMemcpyHtod},
-        {"cuMemcpyHtoDAsync_v2", objs.HandleCuMemcpyHtodAsync},
-        {"cuMemcpyDtoH_v2", objs.HandleCuMemcpyDtoh},
-        {"cuMemcpyDtoHAsync_v2", objs.HandleCuMemcpyDtohAsync},
-    }
+  functions_entry := []struct {
+      name string
+      prog *ebpf.Program
+  }{
+      {"cuLaunchKernel", objs.HandleCuLaunchkernel},
+      {"cuMemAlloc_v2", objs.HandleCuMemAlloc},
+      {"cuMemcpyHtoD_v2", objs.HandleCuMemcpyHtod},
+      {"cuMemcpyHtoDAsync_v2", objs.HandleCuMemcpyHtodAsync},
+      {"cuMemcpyDtoH_v2", objs.HandleCuMemcpyDtoh},
+      {"cuMemcpyDtoHAsync_v2", objs.HandleCuMemcpyDtohAsync},
+      {"cuStreamSynchronize", objs.HandleCuStreamSync},
+  }
 
-  for _, fn := range functions {
-        up, err := ex.Uprobe(fn.name, fn.prog, nil)
-        if err != nil {
-            logger.Warn("failed to attach uprobe", zap.String("function", fn.name), zap.Error(err))
-            continue // skip this one but keep others
-        }
-        gput.Up = append(gput.Up, up)
-        logger.Info("attached uprobe", zap.String("function", fn.name))
+  functions_exit := []struct {
+      name string
+      prog *ebpf.Program
+  }{
+      {"cuStreamSynchronize", objs.HandleCuStreamSynchronizeRet},
+  }
+
+  for _, fn := range functions_entry {
+      up, err := ex.Uprobe(fn.name, fn.prog, nil)
+      if err != nil {
+          logger.Warn("failed to attach uprobe", zap.String("function", fn.name), zap.Error(err))
+          continue // skip this one but keep others
+      }
+      gput.Up = append(gput.Up, up)
+      logger.Info("attached uprobe", zap.String("function", fn.name))
+  }
+
+  for _, fn := range functions_exit {
+      up, err := ex.Uretprobe(fn.name, fn.prog, nil)
+      if err != nil {
+          logger.Warn("failed to attach uretprobe", zap.String("function", fn.name), zap.Error(err))
+          continue // skip this one but keep others
+      }
+      gput.Up = append(gput.Up, up)
+      logger.Info("attached uretprobe", zap.String("function", fn.name))
   }
 
   rb, err := ringbuf.NewReader(objs.GpuRingbuf)
@@ -155,6 +173,13 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any{
 						continue
 					}
 					c <- e
+        case 4: // EVENT_GPU_STREAM_SYNC
+          var e gpuprint.GpuprintGpuStreamEventT
+          if err := binary.Read(bytes.NewBuffer(record.RawSample), binary.LittleEndian, &e); err !=nil{
+            logger.Error("Parsing stream sync event", zap.Error(err))
+            continue
+          }
+          c <- e
 
 				default:
 					logger.Warn("Unknown event flag", zap.Uint8("flag", flag))
