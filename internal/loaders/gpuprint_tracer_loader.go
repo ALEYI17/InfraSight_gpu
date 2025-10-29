@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
@@ -142,11 +141,6 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
 					logger.Warn("Empty record")
 					continue
 				}
-				fmt.Printf("Raw sample (%d bytes):", len(record.RawSample))
-				for i := 0; i < len(record.RawSample) && i < 32; i++ {
-					fmt.Printf(" %02x", record.RawSample[i])
-				}
-				fmt.Println()
 
 				flag := record.RawSample[0]
 
