@@ -1,20 +1,22 @@
-package collector
+package aggregator
 
 import (
 	"context"
 	"time"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
+	"github.com/ALEYI17/InfraSight_gpu/internal/collector/aggregator"
 	"github.com/ALEYI17/InfraSight_gpu/internal/loaders"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
 )
 
+
 func RunWithAggregation(ctx context.Context, gl *loaders.GpuprintLoader, window time.Duration) {
 	logger := logutil.GetLogger()
 	events := gl.Run(ctx, "Casa")
-	aggregator := NewGPUAggregator(window)
+	aggregator := aggregator.NewGPUAggregator(window)
 	ticker := time.NewTicker(window)
 	defer ticker.Stop()
 
