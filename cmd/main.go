@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ALEYI17/InfraSight_gpu/internal/collector"
+	"github.com/ALEYI17/InfraSight_gpu/internal/collector/aggregator"
 	"github.com/ALEYI17/InfraSight_gpu/internal/loaders"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
 	"go.uber.org/zap"
@@ -35,5 +35,5 @@ func main() {
 	defer gl.Close()
 
 	
-  collector.RunWithAggregation(ctx, gl, 10*time.Second)
+  aggregator.RunWithAggregation(ctx, gl, 10*time.Second)
 }
