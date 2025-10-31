@@ -84,6 +84,7 @@ type GpuEvent struct {
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*GpuEvent_Token
+	//	*GpuEvent_Tw
 	Payload       isGpuEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -156,6 +157,15 @@ func (x *GpuEvent) GetToken() *GpuEventToken {
 	return nil
 }
 
+func (x *GpuEvent) GetTw() *GpuTimeWindow {
+	if x != nil {
+		if x, ok := x.Payload.(*GpuEvent_Tw); ok {
+			return x.Tw
+		}
+	}
+	return nil
+}
+
 type isGpuEvent_Payload interface {
 	isGpuEvent_Payload()
 }
@@ -164,7 +174,13 @@ type GpuEvent_Token struct {
 	Token *GpuEventToken `protobuf:"bytes,4,opt,name=token,proto3,oneof"`
 }
 
+type GpuEvent_Tw struct {
+	Tw *GpuTimeWindow `protobuf:"bytes,5,opt,name=tw,proto3,oneof"`
+}
+
 func (*GpuEvent_Token) isGpuEvent_Payload() {}
+
+func (*GpuEvent_Tw) isGpuEvent_Payload() {}
 
 type GpuEventToken struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -562,13 +578,14 @@ var File_gpu_event_proto protoreflect.FileDescriptor
 
 const file_gpu_event_proto_rawDesc = "" +
 	"\n" +
-	"\x0fgpu_event.proto\x12\x02pb\"\x85\x01\n" +
+	"\x0fgpu_event.proto\x12\x02pb\"\xaa\x01\n" +
 	"\bGpuEvent\x12\x10\n" +
 	"\x03pid\x18\x01 \x01(\rR\x03pid\x12\x12\n" +
 	"\x04comm\x18\x02 \x01(\tR\x04comm\x12\x1d\n" +
 	"\n" +
 	"event_type\x18\x03 \x01(\tR\teventType\x12)\n" +
-	"\x05token\x18\x04 \x01(\v2\x11.pb.GpuEventTokenH\x00R\x05tokenB\t\n" +
+	"\x05token\x18\x04 \x01(\v2\x11.pb.GpuEventTokenH\x00R\x05token\x12#\n" +
+	"\x02tw\x18\x05 \x01(\v2\x11.pb.GpuTimeWindowH\x00R\x02twB\t\n" +
 	"\apayload\"\x86\x01\n" +
 	"\rGpuEventToken\x12\x1c\n" +
 	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12/\n" +
@@ -647,15 +664,16 @@ var file_gpu_event_proto_goTypes = []any{
 }
 var file_gpu_event_proto_depIdxs = []int32{
 	2, // 0: pb.GpuEvent.token:type_name -> pb.GpuEventToken
-	0, // 1: pb.GpuEventToken.event_type:type_name -> pb.GpuEventType
-	1, // 2: pb.Batch.batch:type_name -> pb.GpuEvent
-	5, // 3: pb.GpuEventCollector.SendBatch:input_type -> pb.Batch
-	4, // 4: pb.GpuEventCollector.SendBatch:output_type -> pb.CollectorAck
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 1: pb.GpuEvent.tw:type_name -> pb.GpuTimeWindow
+	0, // 2: pb.GpuEventToken.event_type:type_name -> pb.GpuEventType
+	1, // 3: pb.Batch.batch:type_name -> pb.GpuEvent
+	5, // 4: pb.GpuEventCollector.SendBatch:input_type -> pb.Batch
+	4, // 5: pb.GpuEventCollector.SendBatch:output_type -> pb.CollectorAck
+	5, // [5:6] is the sub-list for method output_type
+	4, // [4:5] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_gpu_event_proto_init() }
@@ -665,6 +683,7 @@ func file_gpu_event_proto_init() {
 	}
 	file_gpu_event_proto_msgTypes[0].OneofWrappers = []any{
 		(*GpuEvent_Token)(nil),
+		(*GpuEvent_Tw)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

@@ -10,6 +10,7 @@ message GpuEvent{
   string event_type = 3;
   oneof payload {
     GpuEventToken token = 4;
+    GpuTimeWindow tw = 5;
   }
 }
 
