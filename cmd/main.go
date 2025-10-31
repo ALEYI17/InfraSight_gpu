@@ -38,11 +38,12 @@ func main() {
 			logger.Info("Loaded tracer:", zap.String("Loader", program))
 			defer loaderInstance.Close()
 			lds = append(lds, loaderInstance)
+      logger.Info("Load successfully loader:", zap.String("Loader", program))
 			continue
 		} else {
 			logger.Error("error to load tracer", zap.String("program", program), zap.Error(err))
 		}
-		logger.Info("Load successfully loader:", zap.String("Loader", program))
+		
 	}
 
 	logger.Info("Loader(s) created successfully")
