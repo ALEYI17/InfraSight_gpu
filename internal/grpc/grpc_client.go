@@ -9,7 +9,9 @@ import (
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 
@@ -19,7 +21,7 @@ type Client struct{
   loaders []types.Gpu_loaders
 }
 
-func NewGrpcClient(address string, port string) (*Client,error){
+func NewGrpcClient(address string, port string,loaders []types.Gpu_loaders) (*Client,error){
   serverAdress := fmt.Sprintf("%s:%s", address,port)
 	conn, err := grpc.NewClient(serverAdress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -28,7 +30,7 @@ func NewGrpcClient(address string, port string) (*Client,error){
 
 	client := pb.NewGpuEventCollectorClient(conn)
 
-  return &Client{conn: conn,client: client},nil
+  return &Client{conn: conn,client: client,loaders: loaders},nil
 }
 
 func (c *Client) Close() error {
@@ -42,4 +44,45 @@ func (c *Client) SendBatch(ctx context.Context,in *pb.Batch) (*pb.CollectorAck, 
 
   return c.client.SendBatch(ctx, in)
 
+}
+
+func (c *Client) Run(ctx context.Context, nodeName string) error{
+  logger := logutil.GetLogger()
+
+  eventCh := make(chan *pb.Batch, 500)
+
+  for _, loader := range c.loaders{
+
+    go func(l types.Gpu_loaders){
+      tracerChannel := l.Run(ctx, nodeName)
+      for{
+        select{
+          case <- ctx.Done():
+            return
+        case event:= <- tracerChannel:
+          eventCh <- event
+        }
+      }
+
+    }(loader)
+  }
+
+  for{
+    select{
+      case <- ctx.Done():
+        logger.Info("Client received cancellation signal")
+			  return nil
+    case event := <- eventCh:
+      _,err:=c.SendBatch(ctx, event)
+      if err !=nil{
+        logger.Error("Error from sending", zap.Error(err))
+        status,ok := status.FromError(err)
+        if ok && (status.Code()== codes.Unavailable || status.Code()== codes.Canceled){
+          logger.Warn("Server unavailable. Shutting down client.")
+          return err
+        }
+      }
+    
+    }
+  }
 }
