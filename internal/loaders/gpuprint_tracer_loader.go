@@ -20,9 +20,10 @@ type GpuprintLoader struct {
 	Objs *gpuprint.GpuprintObjects
 	Up   []link.Link
 	Rb   *ringbuf.Reader
+  collectors []types.Gpu_collectors
 }
 
-func NewGpuprinterLoader() (*GpuprintLoader, error) {
+func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, error) {
 
 	logger := logutil.GetLogger()
 	if err := rlimit.RemoveMemlock(); err != nil {
@@ -95,6 +96,10 @@ func NewGpuprinterLoader() (*GpuprintLoader, error) {
 	}
 
 	gput.Rb = rb
+
+  for _,c := range collectors{
+    gput.collectors = append(gput.collectors, c)
+  }
 
 	return gput, nil
 }

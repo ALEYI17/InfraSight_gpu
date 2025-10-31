@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
+	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 	"golang.org/x/sys/unix"
 )
@@ -82,12 +83,12 @@ func (ga *GPUAggregator) Update(ev any) {
 	}
 }
 
-func (ga *GPUAggregator) Flush() []GPUFingerprint {
+func (ga *GPUAggregator) Flush() *pb.Batch {
 	ga.mu.Lock()
 	defer ga.mu.Unlock()
 
 	now := time.Now()
-	finished := []GPUFingerprint{}
+	var events []*pb.GpuEvent
 
 	for pid, w := range ga.windows {
 		if now.After(w.WindowEnd) {
@@ -105,11 +106,43 @@ func (ga *GPUAggregator) Flush() []GPUFingerprint {
 				w.AllocRate = float64(w.MemAllocCount) / duration
 			}
 
-			finished = append(finished, *w)
+      tw := &pb.GpuTimeWindow{
+				WindowStartNs:       w.WindowStart.UnixNano(),
+				WindowEndNs:         w.WindowEnd.UnixNano(),
+				KernelLaunchCount:   w.KernelLaunchCount,
+				MemAllocCount:       w.MemAllocCount,
+				MemcpyCount:         w.MemcpyCount,
+				StreamSyncCount:     w.StreamSyncCount,
+				AvgThreadsPerKernel: w.AvgThreadsPerKernel,
+				MaxThreadsPerKernel: w.MaxThreadsPerKernel,
+				TotalThreadsLaunched: w.TotalThreadsLaunched,
+				TotalMemAllocBytes:  w.TotalMemAllocBytes,
+				TotalMemcpyBytes:    w.TotalMemcpyBytes,
+				HtodBytes:           w.HTODBytes,
+				DtohBytes:           w.DTOHBytes,
+				HtodRatio:           w.HTODRatio,
+				AvgSyncTimeNs:       w.AvgSyncTimeNs,
+				MaxSyncTimeNs:       w.MaxSyncTimeNs,
+				SyncFraction:        w.SyncFraction,
+				LaunchRate:          w.LaunchRate,
+				MemcpyRate:          w.MemcpyRate,
+				AllocRate:           w.AllocRate,
+			}
+
+      event := &pb.GpuEvent{
+				Pid:       w.PID,
+				Comm:      w.Comm,
+				EventType: "GPU_TIME_WINDOW",
+				Payload: &pb.GpuEvent_Tw{
+          Tw: tw,
+        },
+			}
+			events = append(events, event)
 			delete(ga.windows, pid)
 		}
 	}
 
 	ga.lastFlush = now
-	return finished
+  batch := &pb.Batch{Type: "gpu_time_window",Batch: events}
+	return batch
 }
