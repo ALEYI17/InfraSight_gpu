@@ -18,10 +18,10 @@ import (
 )
 
 type GpuprintLoader struct {
-	Objs *gpuprint.GpuprintObjects
-	Up   []link.Link
-	Rb   *ringbuf.Reader
-  collectors []types.Gpu_collectors
+	Objs       *gpuprint.GpuprintObjects
+	Up         []link.Link
+	Rb         *ringbuf.Reader
+	collectors []types.Gpu_collectors
 }
 
 func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, error) {
@@ -98,9 +98,9 @@ func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, e
 
 	gput.Rb = rb
 
-  for _,c := range collectors{
-    gput.collectors = append(gput.collectors, c)
-  }
+	for _, c := range collectors {
+		gput.collectors = append(gput.collectors, c)
+	}
 
 	return gput, nil
 }
@@ -119,15 +119,15 @@ func (gt *GpuprintLoader) Close() {
 	}
 }
 
-func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.GpuBatch {
+func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan *pb.GpuBatch {
 
 	out := make(chan *pb.GpuBatch)
 
 	logger := logutil.GetLogger()
 
-  for _, c := range gt.collectors {
+	for _, c := range gt.collectors {
 		go func(col types.Gpu_collectors) {
-			for batch := range col.Run(ctx) { 
+			for batch := range col.Run(ctx) {
 				out <- batch
 			}
 		}(c)
@@ -181,7 +181,7 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.
 						logger.Error("Parsing memcpy event", zap.Error(err))
 						continue
 					}
-          gt.sendToCollectors(e)
+					gt.sendToCollectors(e)
 				case types.EVENT_GPU_STREAM_SYNC: // EVENT_GPU_STREAM_SYNC
 					var e gpuprint.GpuprintGpuStreamEventT
 					if err := binary.Read(bytes.NewBuffer(record.RawSample), binary.LittleEndian, &e); err != nil {
@@ -202,8 +202,8 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.
 	return out
 }
 
-func (gt *GpuprintLoader)sendToCollectors ( e any){
-  for _,c := range gt.collectors{
-    c.Update(e)
-  }
+func (gt *GpuprintLoader) sendToCollectors(e any) {
+	for _, c := range gt.collectors {
+		c.Update(e)
+	}
 }

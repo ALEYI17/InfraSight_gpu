@@ -29,36 +29,36 @@ func main() {
 		cancel()
 	}()
 
-  cfg := config.LoadConfig()
+	cfg := config.LoadConfig()
 
-  var lds []types.Gpu_loaders
+	var lds []types.Gpu_loaders
 
-  for _, program := range cfg.EnableProbes{
-    if loaderInstance,err := loaders.NewEbpfGpuLoaders(program);err ==nil{
-      logger.Info("Loaded tracer:", zap.String("Loader", program))
-      defer loaderInstance.Close()
-      lds = append(lds, loaderInstance)
-      continue
-    }else{
-      logger.Error("error to load tracer", zap.String("program", program),zap.Error(err))
-    }
-    logger.Info("Load successfully loader:", zap.String("Loader", program))
-  }
-
-  logger.Info("Loader(s) created successfully")
-
-  client, err := grpc.NewGrpcClient(cfg.ServerAdress,cfg.Serverport,lds)
-	if err != nil {
-    logger.Fatal("Error creating the client", zap.Error(err))
+	for _, program := range cfg.EnableProbes {
+		if loaderInstance, err := loaders.NewEbpfGpuLoaders(program); err == nil {
+			logger.Info("Loaded tracer:", zap.String("Loader", program))
+			defer loaderInstance.Close()
+			lds = append(lds, loaderInstance)
+			continue
+		} else {
+			logger.Error("error to load tracer", zap.String("program", program), zap.Error(err))
+		}
+		logger.Info("Load successfully loader:", zap.String("Loader", program))
 	}
 
-  logger.Info(" gRPC Client created successfully")
+	logger.Info("Loader(s) created successfully")
 
-  defer client.Close()
+	client, err := grpc.NewGrpcClient(cfg.ServerAdress, cfg.Serverport, lds)
+	if err != nil {
+		logger.Fatal("Error creating the client", zap.Error(err))
+	}
 
-  if err := client.Run(ctx, cfg.Nodename);err !=nil{
-    logger.Error("Error running client", zap.Error(err))
-    return
-  }
-  logger.Info("Client finished running")
+	logger.Info(" gRPC Client created successfully")
+
+	defer client.Close()
+
+	if err := client.Run(ctx, cfg.Nodename); err != nil {
+		logger.Error("Error running client", zap.Error(err))
+		return
+	}
+	logger.Info("Client finished running")
 }

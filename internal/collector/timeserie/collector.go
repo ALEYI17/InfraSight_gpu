@@ -10,17 +10,17 @@ import (
 )
 
 type TimeSeriesCollector struct {
-	mu      sync.Mutex
-	buffers map[uint32][]*pb.GpuEventToken 
-  comms   map[uint32]string
-  flushInterval time.Duration
+	mu            sync.Mutex
+	buffers       map[uint32][]*pb.GpuEventToken
+	comms         map[uint32]string
+	flushInterval time.Duration
 }
 
 func NewTimeSeriesCollector(t time.Duration) *TimeSeriesCollector {
 	return &TimeSeriesCollector{
-		buffers: make(map[uint32][]*pb.GpuEventToken),
-    comms: make(map[uint32]string),
-    flushInterval: t,
+		buffers:       make(map[uint32][]*pb.GpuEventToken),
+		comms:         make(map[uint32]string),
+		flushInterval: t,
 	}
 }
 
@@ -29,7 +29,7 @@ func (tc *TimeSeriesCollector) Update(ev any) {
 	if token == nil {
 		return
 	}
-  var pid uint32
+	var pid uint32
 	var comm string
 
 	switch e := ev.(type) {
@@ -47,30 +47,29 @@ func (tc *TimeSeriesCollector) Update(ev any) {
 	tc.mu.Lock()
 	defer tc.mu.Unlock()
 	tc.buffers[pid] = append(tc.buffers[pid], token)
-  tc.comms[pid] = comm
+	tc.comms[pid] = comm
 }
 
 func (tc *TimeSeriesCollector) Flush() *pb.GpuBatch {
 	tc.mu.Lock()
 	defer tc.mu.Unlock()
 
-  var events []*pb.GpuEvent
+	var events []*pb.GpuEvent
 
-  for pid,tokens := range tc.buffers{
-    for _,tk := range tokens{
-      event := &pb.GpuEvent{
-      Pid: pid,
-      Comm: tc.comms[pid],
-      EventType: "timeserie",
-        Payload: &pb.GpuEvent_Token{
-          Token: tk,
-        },
-      }
-      events = append(events, event)
-    }     
-  }
+	for pid, tokens := range tc.buffers {
+		for _, tk := range tokens {
+			event := &pb.GpuEvent{
+				Pid:       pid,
+				Comm:      tc.comms[pid],
+				EventType: "timeserie",
+				Payload: &pb.GpuEvent_Token{
+					Token: tk,
+				},
+			}
+			events = append(events, event)
+		}
+	}
 
-  batch := &pb.GpuBatch{Batch: events,Type: "gpu_time_series"}
-  return batch
+	batch := &pb.GpuBatch{Batch: events, Type: "gpu_time_series"}
+	return batch
 }
-

@@ -7,16 +7,15 @@ import (
 	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
 )
 
-
-func (ga * GPUAggregator)Run(ctx context.Context ) <- chan *pb.GpuBatch {
+func (ga *GPUAggregator) Run(ctx context.Context) <-chan *pb.GpuBatch {
 	//logger := logutil.GetLogger()
-  out := make(chan *pb.GpuBatch)
+	out := make(chan *pb.GpuBatch)
 
-  go func(){
-    defer close(out)
-    ticker := time.NewTicker(ga.windowDuration)
+	go func() {
+		defer close(out)
+		ticker := time.NewTicker(ga.windowDuration)
 		defer ticker.Stop()
-    for {
+		for {
 			select {
 			case <-ctx.Done():
 				return
@@ -27,9 +26,9 @@ func (ga * GPUAggregator)Run(ctx context.Context ) <- chan *pb.GpuBatch {
 				}
 			}
 		}
-  }()
+	}()
 
-  return out
+	return out
 	// for {
 	// 	select {
 	// 	case <-ctx.Done():

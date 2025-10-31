@@ -1,5 +1,5 @@
 package types
 
-const(
-  LoaderFingerprint = "fingerprint"
+const (
+	LoaderFingerprint = "fingerprint"
 )

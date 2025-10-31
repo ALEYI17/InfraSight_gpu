@@ -9,14 +9,14 @@ import (
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 )
 
-func NewEbpfGpuLoaders(programs string) (types.Gpu_loaders ,error){
+func NewEbpfGpuLoaders(programs string) (types.Gpu_loaders, error) {
 
-  switch programs{
-    case types.LoaderFingerprint:
-      c1 := aggregator.NewGPUAggregator(10 * time.Second)
-      c2 := timeserie.NewTimeSeriesCollector(10 * time.Second)
-      return NewGpuprinterLoader(c1,c2)
-    default:
-      return nil , errors.New("Unsuported or unknow program")
-  }
+	switch programs {
+	case types.LoaderFingerprint:
+		c1 := aggregator.NewGPUAggregator(10 * time.Second)
+		c2 := timeserie.NewTimeSeriesCollector(10 * time.Second)
+		return NewGpuprinterLoader(c1, c2)
+	default:
+		return nil, errors.New("Unsuported or unknow program")
+	}
 }

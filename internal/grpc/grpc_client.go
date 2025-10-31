@@ -14,15 +14,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-
-type Client struct{
-  conn   *grpc.ClientConn
-	client pb.GpuEventCollectorClient
-  loaders []types.Gpu_loaders
+type Client struct {
+	conn    *grpc.ClientConn
+	client  pb.GpuEventCollectorClient
+	loaders []types.Gpu_loaders
 }
 
-func NewGrpcClient(address string, port string,loaders []types.Gpu_loaders) (*Client,error){
-  serverAdress := fmt.Sprintf("%s:%s", address,port)
+func NewGrpcClient(address string, port string, loaders []types.Gpu_loaders) (*Client, error) {
+	serverAdress := fmt.Sprintf("%s:%s", address, port)
 	conn, err := grpc.NewClient(serverAdress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
@@ -30,59 +29,59 @@ func NewGrpcClient(address string, port string,loaders []types.Gpu_loaders) (*Cl
 
 	client := pb.NewGpuEventCollectorClient(conn)
 
-  return &Client{conn: conn,client: client,loaders: loaders},nil
+	return &Client{conn: conn, client: client, loaders: loaders}, nil
 }
 
 func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendGpuBatch(ctx context.Context,in *pb.GpuBatch) (*pb.CollectorAck, error){
-  logger:= logutil.GetLogger()
+func (c *Client) SendGpuBatch(ctx context.Context, in *pb.GpuBatch) (*pb.CollectorAck, error) {
+	logger := logutil.GetLogger()
 
-  logger.Info("Batch size", zap.Int("size",len(in.Batch)))
+	logger.Info("Batch size", zap.Int("size", len(in.Batch)))
 
-  return c.client.SendGpuBatch(ctx, in)
+	return c.client.SendGpuBatch(ctx, in)
 
 }
 
-func (c *Client) Run(ctx context.Context, nodeName string) error{
-  logger := logutil.GetLogger()
+func (c *Client) Run(ctx context.Context, nodeName string) error {
+	logger := logutil.GetLogger()
 
-  eventCh := make(chan *pb.GpuBatch, 500)
+	eventCh := make(chan *pb.GpuBatch, 500)
 
-  for _, loader := range c.loaders{
+	for _, loader := range c.loaders {
 
-    go func(l types.Gpu_loaders){
-      tracerChannel := l.Run(ctx, nodeName)
-      for{
-        select{
-          case <- ctx.Done():
-            return
-        case event:= <- tracerChannel:
-          eventCh <- event
-        }
-      }
+		go func(l types.Gpu_loaders) {
+			tracerChannel := l.Run(ctx, nodeName)
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case event := <-tracerChannel:
+					eventCh <- event
+				}
+			}
 
-    }(loader)
-  }
+		}(loader)
+	}
 
-  for{
-    select{
-      case <- ctx.Done():
-        logger.Info("Client received cancellation signal")
-			  return nil
-    case event := <- eventCh:
-      _,err:=c.SendGpuBatch(ctx, event)
-      if err !=nil{
-        logger.Error("Error from sending", zap.Error(err))
-        status,ok := status.FromError(err)
-        if ok && (status.Code()== codes.Unavailable || status.Code()== codes.Canceled){
-          logger.Warn("Server unavailable. Shutting down client.")
-          return err
-        }
-      }
-    
-    }
-  }
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("Client received cancellation signal")
+			return nil
+		case event := <-eventCh:
+			_, err := c.SendGpuBatch(ctx, event)
+			if err != nil {
+				logger.Error("Error from sending", zap.Error(err))
+				status, ok := status.FromError(err)
+				if ok && (status.Code() == codes.Unavailable || status.Code() == codes.Canceled) {
+					logger.Warn("Server unavailable. Shutting down client.")
+					return err
+				}
+			}
+
+		}
+	}
 }

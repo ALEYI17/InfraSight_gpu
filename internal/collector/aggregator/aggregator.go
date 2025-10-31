@@ -106,36 +106,36 @@ func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 				w.AllocRate = float64(w.MemAllocCount) / duration
 			}
 
-      tw := &pb.GpuTimeWindow{
-				WindowStartNs:       w.WindowStart.UnixNano(),
-				WindowEndNs:         w.WindowEnd.UnixNano(),
-				KernelLaunchCount:   w.KernelLaunchCount,
-				MemAllocCount:       w.MemAllocCount,
-				MemcpyCount:         w.MemcpyCount,
-				StreamSyncCount:     w.StreamSyncCount,
-				AvgThreadsPerKernel: w.AvgThreadsPerKernel,
-				MaxThreadsPerKernel: w.MaxThreadsPerKernel,
+			tw := &pb.GpuTimeWindow{
+				WindowStartNs:        w.WindowStart.UnixNano(),
+				WindowEndNs:          w.WindowEnd.UnixNano(),
+				KernelLaunchCount:    w.KernelLaunchCount,
+				MemAllocCount:        w.MemAllocCount,
+				MemcpyCount:          w.MemcpyCount,
+				StreamSyncCount:      w.StreamSyncCount,
+				AvgThreadsPerKernel:  w.AvgThreadsPerKernel,
+				MaxThreadsPerKernel:  w.MaxThreadsPerKernel,
 				TotalThreadsLaunched: w.TotalThreadsLaunched,
-				TotalMemAllocBytes:  w.TotalMemAllocBytes,
-				TotalMemcpyBytes:    w.TotalMemcpyBytes,
-				HtodBytes:           w.HTODBytes,
-				DtohBytes:           w.DTOHBytes,
-				HtodRatio:           w.HTODRatio,
-				AvgSyncTimeNs:       w.AvgSyncTimeNs,
-				MaxSyncTimeNs:       w.MaxSyncTimeNs,
-				SyncFraction:        w.SyncFraction,
-				LaunchRate:          w.LaunchRate,
-				MemcpyRate:          w.MemcpyRate,
-				AllocRate:           w.AllocRate,
+				TotalMemAllocBytes:   w.TotalMemAllocBytes,
+				TotalMemcpyBytes:     w.TotalMemcpyBytes,
+				HtodBytes:            w.HTODBytes,
+				DtohBytes:            w.DTOHBytes,
+				HtodRatio:            w.HTODRatio,
+				AvgSyncTimeNs:        w.AvgSyncTimeNs,
+				MaxSyncTimeNs:        w.MaxSyncTimeNs,
+				SyncFraction:         w.SyncFraction,
+				LaunchRate:           w.LaunchRate,
+				MemcpyRate:           w.MemcpyRate,
+				AllocRate:            w.AllocRate,
 			}
 
-      event := &pb.GpuEvent{
+			event := &pb.GpuEvent{
 				Pid:       w.PID,
 				Comm:      w.Comm,
 				EventType: "GPU_TIME_WINDOW",
 				Payload: &pb.GpuEvent_Tw{
-          Tw: tw,
-        },
+					Tw: tw,
+				},
 			}
 			events = append(events, event)
 			delete(ga.windows, pid)
@@ -143,6 +143,6 @@ func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 	}
 
 	ga.lastFlush = now
-  batch := &pb.GpuBatch{Type: "gpu_time_window",Batch: events}
+	batch := &pb.GpuBatch{Type: "gpu_time_window", Batch: events}
 	return batch
 }

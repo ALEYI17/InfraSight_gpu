@@ -8,7 +8,6 @@ import (
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 )
 
-
 func EventToToken(ev any) *pb.GpuEventToken {
 	now := time.Now().UnixNano()
 
