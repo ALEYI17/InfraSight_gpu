@@ -5,11 +5,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/ALEYI17/InfraSight_gpu/internal/collector/aggregator"
+	"github.com/ALEYI17/InfraSight_gpu/internal/config"
+	"github.com/ALEYI17/InfraSight_gpu/internal/grpc"
 	"github.com/ALEYI17/InfraSight_gpu/internal/loaders"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
+	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 	"go.uber.org/zap"
 )
 
@@ -28,12 +29,36 @@ func main() {
 		cancel()
 	}()
 
-	gl, err := loaders.NewGpuprinterLoader()
-	if err != nil {
-		logger.Fatal("err", zap.Error(err))
-	}
-	defer gl.Close()
+  cfg := config.LoadConfig()
 
-	
-  aggregator.RunWithAggregation(ctx, gl, 10*time.Second)
+  var lds []types.Gpu_loaders
+
+  for _, program := range cfg.EnableProbes{
+    if loaderInstance,err := loaders.NewEbpfGpuLoaders(program);err ==nil{
+      logger.Info("Loaded tracer:", zap.String("Loader", program))
+      defer loaderInstance.Close()
+      lds = append(lds, loaderInstance)
+      continue
+    }else{
+      logger.Error("error to load tracer", zap.String("program", program),zap.Error(err))
+    }
+    logger.Info("Load successfully loader:", zap.String("Loader", program))
+  }
+
+  logger.Info("Loader(s) created successfully")
+
+  client, err := grpc.NewGrpcClient(cfg.ServerAdress,cfg.Serverport,lds)
+	if err != nil {
+    logger.Fatal("Error creating the client", zap.Error(err))
+	}
+
+  logger.Info(" gRPC Client created successfully")
+
+  defer client.Close()
+
+  if err := client.Run(ctx, cfg.Nodename);err !=nil{
+    logger.Error("Error running client", zap.Error(err))
+    return
+  }
+  logger.Info("Client finished running")
 }
