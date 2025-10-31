@@ -8,9 +8,9 @@ import (
 )
 
 
-func (tc * TimeSeriesCollector) Run(ctx context.Context) <- chan *pb.Batch{
+func (tc * TimeSeriesCollector) Run(ctx context.Context) <- chan *pb.GpuBatch{
 
-  out := make(chan *pb.Batch)
+  out := make(chan *pb.GpuBatch)
 
   go func(){
     defer close(out)

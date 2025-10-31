@@ -8,5 +8,5 @@ import (
 
 type Gpu_loaders interface{
   Close()
-  Run(context.Context, string) <- chan *pb.Batch
+  Run(context.Context, string) <- chan *pb.GpuBatch
 }

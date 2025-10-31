@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GpuEventCollector_SendBatch_FullMethodName = "/pb.GpuEventCollector/SendBatch"
+	GpuEventCollector_SendGpuBatch_FullMethodName = "/pb.GpuEventCollector/SendGpuBatch"
 )
 
 // GpuEventCollectorClient is the client API for GpuEventCollector service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GpuEventCollectorClient interface {
-	SendBatch(ctx context.Context, in *Batch, opts ...grpc.CallOption) (*CollectorAck, error)
+	SendGpuBatch(ctx context.Context, in *GpuBatch, opts ...grpc.CallOption) (*CollectorAck, error)
 }
 
 type gpuEventCollectorClient struct {
@@ -37,10 +37,10 @@ func NewGpuEventCollectorClient(cc grpc.ClientConnInterface) GpuEventCollectorCl
 	return &gpuEventCollectorClient{cc}
 }
 
-func (c *gpuEventCollectorClient) SendBatch(ctx context.Context, in *Batch, opts ...grpc.CallOption) (*CollectorAck, error) {
+func (c *gpuEventCollectorClient) SendGpuBatch(ctx context.Context, in *GpuBatch, opts ...grpc.CallOption) (*CollectorAck, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CollectorAck)
-	err := c.cc.Invoke(ctx, GpuEventCollector_SendBatch_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, GpuEventCollector_SendGpuBatch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *gpuEventCollectorClient) SendBatch(ctx context.Context, in *Batch, opts
 // All implementations must embed UnimplementedGpuEventCollectorServer
 // for forward compatibility.
 type GpuEventCollectorServer interface {
-	SendBatch(context.Context, *Batch) (*CollectorAck, error)
+	SendGpuBatch(context.Context, *GpuBatch) (*CollectorAck, error)
 	mustEmbedUnimplementedGpuEventCollectorServer()
 }
 
@@ -62,8 +62,8 @@ type GpuEventCollectorServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGpuEventCollectorServer struct{}
 
-func (UnimplementedGpuEventCollectorServer) SendBatch(context.Context, *Batch) (*CollectorAck, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendBatch not implemented")
+func (UnimplementedGpuEventCollectorServer) SendGpuBatch(context.Context, *GpuBatch) (*CollectorAck, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendGpuBatch not implemented")
 }
 func (UnimplementedGpuEventCollectorServer) mustEmbedUnimplementedGpuEventCollectorServer() {}
 func (UnimplementedGpuEventCollectorServer) testEmbeddedByValue()                           {}
@@ -86,20 +86,20 @@ func RegisterGpuEventCollectorServer(s grpc.ServiceRegistrar, srv GpuEventCollec
 	s.RegisterService(&GpuEventCollector_ServiceDesc, srv)
 }
 
-func _GpuEventCollector_SendBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Batch)
+func _GpuEventCollector_SendGpuBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GpuBatch)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GpuEventCollectorServer).SendBatch(ctx, in)
+		return srv.(GpuEventCollectorServer).SendGpuBatch(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GpuEventCollector_SendBatch_FullMethodName,
+		FullMethod: GpuEventCollector_SendGpuBatch_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GpuEventCollectorServer).SendBatch(ctx, req.(*Batch))
+		return srv.(GpuEventCollectorServer).SendGpuBatch(ctx, req.(*GpuBatch))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +112,8 @@ var GpuEventCollector_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GpuEventCollectorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendBatch",
-			Handler:    _GpuEventCollector_SendBatch_Handler,
+			MethodName: "SendGpuBatch",
+			Handler:    _GpuEventCollector_SendGpuBatch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

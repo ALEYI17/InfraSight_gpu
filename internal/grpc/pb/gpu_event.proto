@@ -65,11 +65,11 @@ message CollectorAck {
   string message = 69;
 }
 
-message Batch{
+message GpuBatch{
   string type = 10;
   repeated GpuEvent batch = 11;
 }
 
 service GpuEventCollector{
-  rpc SendBatch(Batch) returns (CollectorAck);
+  rpc SendGpuBatch(GpuBatch) returns (CollectorAck);
 }

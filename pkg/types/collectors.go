@@ -8,6 +8,6 @@ import (
 
 type Gpu_collectors interface{
   Update(ev any)
-  Flush() *pb.Batch
-  Run(context.Context) <- chan *pb.Batch
+  Flush() *pb.GpuBatch
+  Run(context.Context) <- chan *pb.GpuBatch
 }

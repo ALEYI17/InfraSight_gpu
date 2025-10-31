@@ -83,7 +83,7 @@ func (ga *GPUAggregator) Update(ev any) {
 	}
 }
 
-func (ga *GPUAggregator) Flush() *pb.Batch {
+func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 	ga.mu.Lock()
 	defer ga.mu.Unlock()
 
@@ -143,6 +143,6 @@ func (ga *GPUAggregator) Flush() *pb.Batch {
 	}
 
 	ga.lastFlush = now
-  batch := &pb.Batch{Type: "gpu_time_window",Batch: events}
+  batch := &pb.GpuBatch{Type: "gpu_time_window",Batch: events}
 	return batch
 }

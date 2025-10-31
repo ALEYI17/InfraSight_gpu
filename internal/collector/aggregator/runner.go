@@ -8,9 +8,9 @@ import (
 )
 
 
-func (ga * GPUAggregator)Run(ctx context.Context ) <- chan *pb.Batch {
+func (ga * GPUAggregator)Run(ctx context.Context ) <- chan *pb.GpuBatch {
 	//logger := logutil.GetLogger()
-  out := make(chan *pb.Batch)
+  out := make(chan *pb.GpuBatch)
 
   go func(){
     defer close(out)

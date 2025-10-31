@@ -119,9 +119,9 @@ func (gt *GpuprintLoader) Close() {
 	}
 }
 
-func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.Batch {
+func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.GpuBatch {
 
-	out := make(chan *pb.Batch)
+	out := make(chan *pb.GpuBatch)
 
 	logger := logutil.GetLogger()
 

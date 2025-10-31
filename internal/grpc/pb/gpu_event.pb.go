@@ -522,7 +522,7 @@ func (x *CollectorAck) GetMessage() string {
 	return ""
 }
 
-type Batch struct {
+type GpuBatch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          string                 `protobuf:"bytes,10,opt,name=type,proto3" json:"type,omitempty"`
 	Batch         []*GpuEvent            `protobuf:"bytes,11,rep,name=batch,proto3" json:"batch,omitempty"`
@@ -530,20 +530,20 @@ type Batch struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Batch) Reset() {
-	*x = Batch{}
+func (x *GpuBatch) Reset() {
+	*x = GpuBatch{}
 	mi := &file_gpu_event_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Batch) String() string {
+func (x *GpuBatch) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Batch) ProtoMessage() {}
+func (*GpuBatch) ProtoMessage() {}
 
-func (x *Batch) ProtoReflect() protoreflect.Message {
+func (x *GpuBatch) ProtoReflect() protoreflect.Message {
 	mi := &file_gpu_event_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -555,19 +555,19 @@ func (x *Batch) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Batch.ProtoReflect.Descriptor instead.
-func (*Batch) Descriptor() ([]byte, []int) {
+// Deprecated: Use GpuBatch.ProtoReflect.Descriptor instead.
+func (*GpuBatch) Descriptor() ([]byte, []int) {
 	return file_gpu_event_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Batch) GetType() string {
+func (x *GpuBatch) GetType() string {
 	if x != nil {
 		return x.Type
 	}
 	return ""
 }
 
-func (x *Batch) GetBatch() []*GpuEvent {
+func (x *GpuBatch) GetBatch() []*GpuEvent {
 	if x != nil {
 		return x.Batch
 	}
@@ -626,8 +626,8 @@ const file_gpu_event_proto_rawDesc = "" +
 	"alloc_rate\x18\x17 \x01(\x01R\tallocRate\"@\n" +
 	"\fCollectorAck\x12\x16\n" +
 	"\x06status\x18D \x01(\tR\x06status\x12\x18\n" +
-	"\amessage\x18E \x01(\tR\amessage\"?\n" +
-	"\x05Batch\x12\x12\n" +
+	"\amessage\x18E \x01(\tR\amessage\"B\n" +
+	"\bGpuBatch\x12\x12\n" +
 	"\x04type\x18\n" +
 	" \x01(\tR\x04type\x12\"\n" +
 	"\x05batch\x18\v \x03(\v2\f.pb.GpuEventR\x05batch*w\n" +
@@ -636,9 +636,9 @@ const file_gpu_event_proto_rawDesc = "" +
 	"\x13EVENT_KERNEL_LAUNCH\x10\x01\x12\x12\n" +
 	"\x0eEVENT_MEMALLOC\x10\x02\x12\x10\n" +
 	"\fEVENT_MEMCPY\x10\x03\x12\x15\n" +
-	"\x11EVENT_STREAM_SYNC\x10\x042=\n" +
-	"\x11GpuEventCollector\x12(\n" +
-	"\tSendBatch\x12\t.pb.Batch\x1a\x10.pb.CollectorAckB7Z5github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb;pbb\x06proto3"
+	"\x11EVENT_STREAM_SYNC\x10\x042C\n" +
+	"\x11GpuEventCollector\x12.\n" +
+	"\fSendGpuBatch\x12\f.pb.GpuBatch\x1a\x10.pb.CollectorAckB7Z5github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb;pbb\x06proto3"
 
 var (
 	file_gpu_event_proto_rawDescOnce sync.Once
@@ -660,15 +660,15 @@ var file_gpu_event_proto_goTypes = []any{
 	(*GpuEventToken)(nil), // 2: pb.GpuEventToken
 	(*GpuTimeWindow)(nil), // 3: pb.GpuTimeWindow
 	(*CollectorAck)(nil),  // 4: pb.CollectorAck
-	(*Batch)(nil),         // 5: pb.Batch
+	(*GpuBatch)(nil),      // 5: pb.GpuBatch
 }
 var file_gpu_event_proto_depIdxs = []int32{
 	2, // 0: pb.GpuEvent.token:type_name -> pb.GpuEventToken
 	3, // 1: pb.GpuEvent.tw:type_name -> pb.GpuTimeWindow
 	0, // 2: pb.GpuEventToken.event_type:type_name -> pb.GpuEventType
-	1, // 3: pb.Batch.batch:type_name -> pb.GpuEvent
-	5, // 4: pb.GpuEventCollector.SendBatch:input_type -> pb.Batch
-	4, // 5: pb.GpuEventCollector.SendBatch:output_type -> pb.CollectorAck
+	1, // 3: pb.GpuBatch.batch:type_name -> pb.GpuEvent
+	5, // 4: pb.GpuEventCollector.SendGpuBatch:input_type -> pb.GpuBatch
+	4, // 5: pb.GpuEventCollector.SendGpuBatch:output_type -> pb.CollectorAck
 	5, // [5:6] is the sub-list for method output_type
 	4, // [4:5] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name

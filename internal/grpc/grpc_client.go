@@ -37,19 +37,19 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendBatch(ctx context.Context,in *pb.Batch) (*pb.CollectorAck, error){
+func (c *Client) SendGpuBatch(ctx context.Context,in *pb.GpuBatch) (*pb.CollectorAck, error){
   logger:= logutil.GetLogger()
 
   logger.Info("Batch size", zap.Int("size",len(in.Batch)))
 
-  return c.client.SendBatch(ctx, in)
+  return c.client.SendGpuBatch(ctx, in)
 
 }
 
 func (c *Client) Run(ctx context.Context, nodeName string) error{
   logger := logutil.GetLogger()
 
-  eventCh := make(chan *pb.Batch, 500)
+  eventCh := make(chan *pb.GpuBatch, 500)
 
   for _, loader := range c.loaders{
 
@@ -73,7 +73,7 @@ func (c *Client) Run(ctx context.Context, nodeName string) error{
         logger.Info("Client received cancellation signal")
 			  return nil
     case event := <- eventCh:
-      _,err:=c.SendBatch(ctx, event)
+      _,err:=c.SendGpuBatch(ctx, event)
       if err !=nil{
         logger.Error("Error from sending", zap.Error(err))
         status,ok := status.FromError(err)

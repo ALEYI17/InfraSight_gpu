@@ -50,7 +50,7 @@ func (tc *TimeSeriesCollector) Update(ev any) {
   tc.comms[pid] = comm
 }
 
-func (tc *TimeSeriesCollector) Flush() *pb.Batch {
+func (tc *TimeSeriesCollector) Flush() *pb.GpuBatch {
 	tc.mu.Lock()
 	defer tc.mu.Unlock()
 
@@ -70,7 +70,7 @@ func (tc *TimeSeriesCollector) Flush() *pb.Batch {
     }     
   }
 
-  batch := &pb.Batch{Batch: events,Type: "gpu_time_series"}
+  batch := &pb.GpuBatch{Batch: events,Type: "gpu_time_series"}
   return batch
 }
 
