@@ -8,13 +8,13 @@ import (
 )
 
 
-func (tc * TimeSeriesCollector) Run(ctx context.Context, flushInterval time.Duration) <- chan *pb.Batch{
+func (tc * TimeSeriesCollector) Run(ctx context.Context) <- chan *pb.Batch{
 
   out := make(chan *pb.Batch)
 
   go func(){
     defer close(out)
-    ticker := time.NewTicker(flushInterval)
+    ticker := time.NewTicker(tc.flushInterval)
 		defer ticker.Stop()
     for {
 			select {

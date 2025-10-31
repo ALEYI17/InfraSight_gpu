@@ -2,6 +2,7 @@ package timeserie
 
 import (
 	"sync"
+	"time"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
 	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
@@ -12,12 +13,14 @@ type TimeSeriesCollector struct {
 	mu      sync.Mutex
 	buffers map[uint32][]*pb.GpuEventToken 
   comms   map[uint32]string
+  flushInterval time.Duration
 }
 
-func NewTimeSeriesCollector() *TimeSeriesCollector {
+func NewTimeSeriesCollector(t time.Duration) *TimeSeriesCollector {
 	return &TimeSeriesCollector{
 		buffers: make(map[uint32][]*pb.GpuEventToken),
     comms: make(map[uint32]string),
+    flushInterval: t,
 	}
 }
 

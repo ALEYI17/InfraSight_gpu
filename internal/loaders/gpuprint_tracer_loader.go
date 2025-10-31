@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
+	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 	"github.com/cilium/ebpf"
@@ -118,11 +119,19 @@ func (gt *GpuprintLoader) Close() {
 	}
 }
 
-func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
+func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <- chan *pb.Batch {
 
-	c := make(chan any)
+	out := make(chan *pb.Batch)
 
 	logger := logutil.GetLogger()
+
+  for _, c := range gt.collectors {
+		go func(col types.Gpu_collectors) {
+			for batch := range col.Run(ctx) { 
+				out <- batch
+			}
+		}(c)
+	}
 
 	go func() {
 
@@ -156,7 +165,7 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
 						logger.Error("Parsing kernel launch event", zap.Error(err))
 						continue
 					}
-					c <- e
+					gt.sendToCollectors(e)
 
 				case types.EVENT_GPU_MALLOC: // EVENT_GPU_MALLOC
 					var e gpuprint.GpuprintGpuMemallocEventT
@@ -164,7 +173,7 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
 						logger.Error("Parsing memalloc event", zap.Error(err))
 						continue
 					}
-					c <- e
+					gt.sendToCollectors(e)
 
 				case types.EVENT_GPU_MEMCPY: // EVENT_GPU_MEMCPY
 					var e gpuprint.GpuprintGpuMemcpyEventT
@@ -172,14 +181,14 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
 						logger.Error("Parsing memcpy event", zap.Error(err))
 						continue
 					}
-					c <- e
+          gt.sendToCollectors(e)
 				case types.EVENT_GPU_STREAM_SYNC: // EVENT_GPU_STREAM_SYNC
 					var e gpuprint.GpuprintGpuStreamEventT
 					if err := binary.Read(bytes.NewBuffer(record.RawSample), binary.LittleEndian, &e); err != nil {
 						logger.Error("Parsing stream sync event", zap.Error(err))
 						continue
 					}
-					c <- e
+					gt.sendToCollectors(e)
 
 				default:
 					logger.Warn("Unknown event flag", zap.Uint8("flag", flag))
@@ -190,5 +199,11 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan any {
 
 	}()
 
-	return c
+	return out
+}
+
+func (gt *GpuprintLoader)sendToCollectors ( e any){
+  for _,c := range gt.collectors{
+    c.Update(e)
+  }
 }

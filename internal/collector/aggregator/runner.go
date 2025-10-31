@@ -8,13 +8,13 @@ import (
 )
 
 
-func (ga * GPUAggregator)Run(ctx context.Context, flushInterval time.Duration) <- chan *pb.Batch {
+func (ga * GPUAggregator)Run(ctx context.Context ) <- chan *pb.Batch {
 	//logger := logutil.GetLogger()
   out := make(chan *pb.Batch)
 
   go func(){
     defer close(out)
-    ticker := time.NewTicker(flushInterval)
+    ticker := time.NewTicker(ga.windowDuration)
 		defer ticker.Stop()
     for {
 			select {

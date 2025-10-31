@@ -6,6 +6,7 @@ import (
 
 	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
+	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -15,6 +16,7 @@ import (
 type Client struct{
   conn   *grpc.ClientConn
 	client pb.GpuEventCollectorClient
+  loaders []types.Gpu_loaders
 }
 
 func NewGrpcClient(address string, port string) (*Client,error){
