@@ -59,16 +59,21 @@ func (ga *GPUAggregator) Update(ev any) {
 		w.TotalThreadsLaunched += totalThreads
 		w.AvgThreadsPerKernel = ((w.AvgThreadsPerKernel * float64(w.KernelLaunchCount-1)) + float64(totalThreads)) / float64(w.KernelLaunchCount)
 		w.MaxThreadsPerKernel = max(w.MaxThreadsPerKernel, totalThreads)
+    
+    blocks := e.Gridx * e.Gridy * e.Gridz
+    w.AvgBlocksPerKernel = ((w.AvgBlocksPerKernel * float64(w.KernelLaunchCount-1)) + float64(blocks)) / float64(w.KernelLaunchCount)
 
 	case gpuprint.GpuprintGpuMemallocEventT:
 		w := ga.ensureWindow(e.Pid, e.Comm[:])
 		w.MemAllocCount++
 		w.TotalMemAllocBytes += e.ByteSize
+    w.AvgMemAllocBytes = ((w.AvgMemAllocBytes * float64(w.MemAllocCount-1)) + float64(e.ByteSize)) / float64(w.MemAllocCount)
 
 	case gpuprint.GpuprintGpuMemcpyEventT:
 		w := ga.ensureWindow(e.Pid, e.Comm[:])
 		w.MemcpyCount++
 		w.TotalMemcpyBytes += e.ByteSize
+    w.AvgMemcpyBytes = ((w.AvgMemcpyBytes * float64(w.MemcpyCount-1)) + float64(e.ByteSize)) / float64(w.MemcpyCount)
 		if e.Kind == types.DIR_HTOD {
 			w.HTODBytes += e.ByteSize
 		} else {
@@ -114,6 +119,7 @@ func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 				MemcpyCount:          w.MemcpyCount,
 				StreamSyncCount:      w.StreamSyncCount,
 				AvgThreadsPerKernel:  w.AvgThreadsPerKernel,
+        AvgBlocksPerKernel:   w.AvgBlocksPerKernel,
 				MaxThreadsPerKernel:  w.MaxThreadsPerKernel,
 				TotalThreadsLaunched: w.TotalThreadsLaunched,
 				TotalMemAllocBytes:   w.TotalMemAllocBytes,
@@ -121,6 +127,8 @@ func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 				HtodBytes:            w.HTODBytes,
 				DtohBytes:            w.DTOHBytes,
 				HtodRatio:            w.HTODRatio,
+        AvgMemAllocBytes:     w.AvgMemAllocBytes,
+        AvgMemcpyBytes:       w.AvgMemcpyBytes,
 				AvgSyncTimeNs:        w.AvgSyncTimeNs,
 				MaxSyncTimeNs:        w.MaxSyncTimeNs,
 				SyncFraction:         w.SyncFraction,
