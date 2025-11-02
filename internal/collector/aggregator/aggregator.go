@@ -142,6 +142,9 @@ func (ga *GPUAggregator) Flush() *pb.GpuBatch {
 		}
 	}
 
+  if len(events) ==0{
+    return nil
+  }
 	ga.lastFlush = now
 	batch := &pb.GpuBatch{Type: "gpu_time_window", Batch: events}
 	return batch

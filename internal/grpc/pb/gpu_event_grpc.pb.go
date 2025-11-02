@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GpuEventCollector_SendGpuBatch_FullMethodName = "/pb.GpuEventCollector/SendGpuBatch"
+	GpuEventCollector_SendGpuBatch_FullMethodName = "/gpupb.GpuEventCollector/SendGpuBatch"
 )
 
 // GpuEventCollectorClient is the client API for GpuEventCollector service.
@@ -108,7 +108,7 @@ func _GpuEventCollector_SendGpuBatch_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GpuEventCollector_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.GpuEventCollector",
+	ServiceName: "gpupb.GpuEventCollector",
 	HandlerType: (*GpuEventCollectorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

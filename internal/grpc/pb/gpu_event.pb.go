@@ -185,7 +185,7 @@ func (*GpuEvent_Tw) isGpuEvent_Payload() {}
 type GpuEventToken struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Timestamp     int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	EventType     GpuEventType           `protobuf:"varint,2,opt,name=event_type,json=eventType,proto3,enum=pb.GpuEventType" json:"event_type,omitempty"`
+	EventType     GpuEventType           `protobuf:"varint,2,opt,name=event_type,json=eventType,proto3,enum=gpupb.GpuEventType" json:"event_type,omitempty"`
 	Value         float64                `protobuf:"fixed64,3,opt,name=value,proto3" json:"value,omitempty"`
 	Dir           int64                  `protobuf:"varint,4,opt,name=dir,proto3" json:"dir,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -578,19 +578,19 @@ var File_gpu_event_proto protoreflect.FileDescriptor
 
 const file_gpu_event_proto_rawDesc = "" +
 	"\n" +
-	"\x0fgpu_event.proto\x12\x02pb\"\xaa\x01\n" +
+	"\x0fgpu_event.proto\x12\x05gpupb\"\xb0\x01\n" +
 	"\bGpuEvent\x12\x10\n" +
 	"\x03pid\x18\x01 \x01(\rR\x03pid\x12\x12\n" +
 	"\x04comm\x18\x02 \x01(\tR\x04comm\x12\x1d\n" +
 	"\n" +
-	"event_type\x18\x03 \x01(\tR\teventType\x12)\n" +
-	"\x05token\x18\x04 \x01(\v2\x11.pb.GpuEventTokenH\x00R\x05token\x12#\n" +
-	"\x02tw\x18\x05 \x01(\v2\x11.pb.GpuTimeWindowH\x00R\x02twB\t\n" +
-	"\apayload\"\x86\x01\n" +
+	"event_type\x18\x03 \x01(\tR\teventType\x12,\n" +
+	"\x05token\x18\x04 \x01(\v2\x14.gpupb.GpuEventTokenH\x00R\x05token\x12&\n" +
+	"\x02tw\x18\x05 \x01(\v2\x14.gpupb.GpuTimeWindowH\x00R\x02twB\t\n" +
+	"\apayload\"\x89\x01\n" +
 	"\rGpuEventToken\x12\x1c\n" +
-	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12/\n" +
+	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x122\n" +
 	"\n" +
-	"event_type\x18\x02 \x01(\x0e2\x10.pb.GpuEventTypeR\teventType\x12\x14\n" +
+	"event_type\x18\x02 \x01(\x0e2\x13.gpupb.GpuEventTypeR\teventType\x12\x14\n" +
 	"\x05value\x18\x03 \x01(\x01R\x05value\x12\x10\n" +
 	"\x03dir\x18\x04 \x01(\x03R\x03dir\"\xc4\a\n" +
 	"\rGpuTimeWindow\x12&\n" +
@@ -626,19 +626,19 @@ const file_gpu_event_proto_rawDesc = "" +
 	"alloc_rate\x18\x17 \x01(\x01R\tallocRate\"@\n" +
 	"\fCollectorAck\x12\x16\n" +
 	"\x06status\x18D \x01(\tR\x06status\x12\x18\n" +
-	"\amessage\x18E \x01(\tR\amessage\"B\n" +
+	"\amessage\x18E \x01(\tR\amessage\"E\n" +
 	"\bGpuBatch\x12\x12\n" +
 	"\x04type\x18\n" +
-	" \x01(\tR\x04type\x12\"\n" +
-	"\x05batch\x18\v \x03(\v2\f.pb.GpuEventR\x05batch*w\n" +
+	" \x01(\tR\x04type\x12%\n" +
+	"\x05batch\x18\v \x03(\v2\x0f.gpupb.GpuEventR\x05batch*w\n" +
 	"\fGpuEventType\x12\x11\n" +
 	"\rEVENT_UNKNOWN\x10\x00\x12\x17\n" +
 	"\x13EVENT_KERNEL_LAUNCH\x10\x01\x12\x12\n" +
 	"\x0eEVENT_MEMALLOC\x10\x02\x12\x10\n" +
 	"\fEVENT_MEMCPY\x10\x03\x12\x15\n" +
-	"\x11EVENT_STREAM_SYNC\x10\x042C\n" +
-	"\x11GpuEventCollector\x12.\n" +
-	"\fSendGpuBatch\x12\f.pb.GpuBatch\x1a\x10.pb.CollectorAckB7Z5github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb;pbb\x06proto3"
+	"\x11EVENT_STREAM_SYNC\x10\x042I\n" +
+	"\x11GpuEventCollector\x124\n" +
+	"\fSendGpuBatch\x12\x0f.gpupb.GpuBatch\x1a\x13.gpupb.CollectorAckB7Z5github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb;pbb\x06proto3"
 
 var (
 	file_gpu_event_proto_rawDescOnce sync.Once
@@ -655,20 +655,20 @@ func file_gpu_event_proto_rawDescGZIP() []byte {
 var file_gpu_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_gpu_event_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_gpu_event_proto_goTypes = []any{
-	(GpuEventType)(0),     // 0: pb.GpuEventType
-	(*GpuEvent)(nil),      // 1: pb.GpuEvent
-	(*GpuEventToken)(nil), // 2: pb.GpuEventToken
-	(*GpuTimeWindow)(nil), // 3: pb.GpuTimeWindow
-	(*CollectorAck)(nil),  // 4: pb.CollectorAck
-	(*GpuBatch)(nil),      // 5: pb.GpuBatch
+	(GpuEventType)(0),     // 0: gpupb.GpuEventType
+	(*GpuEvent)(nil),      // 1: gpupb.GpuEvent
+	(*GpuEventToken)(nil), // 2: gpupb.GpuEventToken
+	(*GpuTimeWindow)(nil), // 3: gpupb.GpuTimeWindow
+	(*CollectorAck)(nil),  // 4: gpupb.CollectorAck
+	(*GpuBatch)(nil),      // 5: gpupb.GpuBatch
 }
 var file_gpu_event_proto_depIdxs = []int32{
-	2, // 0: pb.GpuEvent.token:type_name -> pb.GpuEventToken
-	3, // 1: pb.GpuEvent.tw:type_name -> pb.GpuTimeWindow
-	0, // 2: pb.GpuEventToken.event_type:type_name -> pb.GpuEventType
-	1, // 3: pb.GpuBatch.batch:type_name -> pb.GpuEvent
-	5, // 4: pb.GpuEventCollector.SendGpuBatch:input_type -> pb.GpuBatch
-	4, // 5: pb.GpuEventCollector.SendGpuBatch:output_type -> pb.CollectorAck
+	2, // 0: gpupb.GpuEvent.token:type_name -> gpupb.GpuEventToken
+	3, // 1: gpupb.GpuEvent.tw:type_name -> gpupb.GpuTimeWindow
+	0, // 2: gpupb.GpuEventToken.event_type:type_name -> gpupb.GpuEventType
+	1, // 3: gpupb.GpuBatch.batch:type_name -> gpupb.GpuEvent
+	5, // 4: gpupb.GpuEventCollector.SendGpuBatch:input_type -> gpupb.GpuBatch
+	4, // 5: gpupb.GpuEventCollector.SendGpuBatch:output_type -> gpupb.CollectorAck
 	5, // [5:6] is the sub-list for method output_type
 	4, // [4:5] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name

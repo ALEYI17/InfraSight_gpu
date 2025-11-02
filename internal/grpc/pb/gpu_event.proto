@@ -1,6 +1,6 @@
 syntax= "proto3";
 
-package pb;
+package gpupb;
 
 option go_package = "github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb;pb";
 

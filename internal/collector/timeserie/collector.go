@@ -70,6 +70,13 @@ func (tc *TimeSeriesCollector) Flush() *pb.GpuBatch {
 		}
 	}
 
+  tc.buffers = make(map[uint32][]*pb.GpuEventToken)
+	tc.comms = make(map[uint32]string)
+
+  if len(events) == 0 {
+		return nil 
+	}
+
 	batch := &pb.GpuBatch{Batch: events, Type: "gpu_time_series"}
 	return batch
 }
