@@ -20,9 +20,12 @@ type Client struct {
 	loaders []types.Gpu_loaders
 }
 
+const maxMsgSize = 64 * 1024 * 1024
+
 func NewGrpcClient(address string, port string, loaders []types.Gpu_loaders) (*Client, error) {
 	serverAdress := fmt.Sprintf("%s:%s", address, port)
-	conn, err := grpc.NewClient(serverAdress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(serverAdress, grpc.WithTransportCredentials(insecure.NewCredentials()),
+    grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize), grpc.MaxCallSendMsgSize(maxMsgSize)))
 	if err != nil {
 		return nil, err
 	}

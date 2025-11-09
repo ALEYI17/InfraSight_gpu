@@ -13,8 +13,8 @@ func NewEbpfGpuLoaders(programs string) (types.Gpu_loaders, error) {
 
 	switch programs {
 	case types.LoaderFingerprint:
-		c1 := aggregator.NewGPUAggregator(10 * time.Second)
-		c2 := timeserie.NewTimeSeriesCollector(10 * time.Second)
+		c1 := aggregator.NewGPUAggregator(2 * time.Second)
+		c2 := timeserie.NewTimeSeriesCollector(5 * time.Second)
 		return NewGpuprinterLoader(c1, c2)
 	default:
 		return nil, errors.New("Unsuported or unknow program")

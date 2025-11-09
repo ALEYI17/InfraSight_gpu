@@ -42,7 +42,7 @@ func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, e
 		Objs: &objs,
 	}
 
-	ex, err := link.OpenExecutable("/usr/lib/wsl/drivers/nvmdi.inf_amd64_f088ae99b5a2f5fd/libcuda.so.1.1")
+	ex, err := link.OpenExecutable("/usr/lib/wsl/drivers/nvmdi.inf_amd64_c2d1126d336032b3/libcuda.so.1.1")
 	if err != nil {
 		logger.Error("error", zap.Error(err))
 		gput.Close()
