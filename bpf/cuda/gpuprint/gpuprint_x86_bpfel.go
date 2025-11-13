@@ -107,6 +107,8 @@ type GpuprintSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintProgramSpecs struct {
+	HandleCuCtxSync              *ebpf.ProgramSpec `ebpf:"handle_cuCtxSync"`
+	HandleCuCtxSyncRet           *ebpf.ProgramSpec `ebpf:"handle_cuCtxSync_ret"`
 	HandleCuLaunchkernel         *ebpf.ProgramSpec `ebpf:"handle_cuLaunchkernel"`
 	HandleCuMemAlloc             *ebpf.ProgramSpec `ebpf:"handle_cuMemAlloc"`
 	HandleCuMemcpyDtoh           *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_dtoh"`
@@ -180,6 +182,8 @@ type GpuprintVariables struct {
 //
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintPrograms struct {
+	HandleCuCtxSync              *ebpf.Program `ebpf:"handle_cuCtxSync"`
+	HandleCuCtxSyncRet           *ebpf.Program `ebpf:"handle_cuCtxSync_ret"`
 	HandleCuLaunchkernel         *ebpf.Program `ebpf:"handle_cuLaunchkernel"`
 	HandleCuMemAlloc             *ebpf.Program `ebpf:"handle_cuMemAlloc"`
 	HandleCuMemcpyDtoh           *ebpf.Program `ebpf:"handle_cuMemcpy_dtoh"`
@@ -192,6 +196,8 @@ type GpuprintPrograms struct {
 
 func (p *GpuprintPrograms) Close() error {
 	return _GpuprintClose(
+		p.HandleCuCtxSync,
+		p.HandleCuCtxSyncRet,
 		p.HandleCuLaunchkernel,
 		p.HandleCuMemAlloc,
 		p.HandleCuMemcpyDtoh,

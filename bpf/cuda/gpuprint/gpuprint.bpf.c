@@ -274,3 +274,47 @@ int BPF_KRETPROBE(handle_cuStreamSynchronize_ret){
   return 0;
 }
 
+SEC("uprobe/cuCtxSynchronize")
+int BPF_KPROBE(handle_cuCtxSync){
+
+  __u64 id = bpf_get_current_pid_tgid(); 
+  __u64 ts = bpf_ktime_get_ns();
+
+  bpf_map_update_elem(&start_events_stream,&id,&ts,BPF_ANY);
+  return 0;
+}
+
+SEC("uretprobe/cuCtxSynchronize")
+int BPF_KRETPROBE(handle_cuCtxSync_ret){
+
+  struct gpu_stream_event_t *e;
+
+  __u64 id = bpf_get_current_pid_tgid();
+
+  __u64 *tsp = bpf_map_lookup_elem(&start_events_stream, &id);
+  if (!tsp) {
+      return 0;
+  }
+
+  e = bpf_ringbuf_reserve(&gpu_ringbuf, sizeof(*e), 0);
+    if (!e) return 0;
+  
+  e->pid = id >> 32;
+
+  e->start_time = *tsp;
+
+  e->end_time = bpf_ktime_get_ns();
+
+  e->delta_ns =  e->end_time - e->start_time;
+
+  e->flag = EVENT_GPU_STREAM_SYNC;
+
+  bpf_get_current_comm(&e->comm, sizeof(e->comm));
+
+  bpf_map_delete_elem(&start_events_stream, &id);
+
+  bpf_ringbuf_submit(e, 0);
+
+  return 0;
+}
+

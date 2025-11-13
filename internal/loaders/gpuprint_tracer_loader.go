@@ -53,13 +53,32 @@ func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, e
 		name string
 		prog *ebpf.Program
 	}{
+    // kernel launch
 		{"cuLaunchKernel", objs.HandleCuLaunchkernel},
+    {"cuLaunchKernel_ptsz", objs.HandleCuLaunchkernel},
+    // CuMemAlloc
 		{"cuMemAlloc_v2", objs.HandleCuMemAlloc},
+    {"cuMemAlloc", objs.HandleCuMemAlloc},
+    // cuMemcpyHtoD
 		{"cuMemcpyHtoD_v2", objs.HandleCuMemcpyHtod},
 		{"cuMemcpyHtoDAsync_v2", objs.HandleCuMemcpyHtodAsync},
+    {"cuMemcpyHtoD", objs.HandleCuMemcpyHtod},
+		{"cuMemcpyHtoDAsync", objs.HandleCuMemcpyHtodAsync},
+    {"cuMemcpyHtoDAsync_v2_ptsz", objs.HandleCuMemcpyHtod},
+		{"cuMemcpyHtoD_v2_ptds", objs.HandleCuMemcpyHtodAsync},
+    // cuMemDtoH
 		{"cuMemcpyDtoH_v2", objs.HandleCuMemcpyDtoh},
 		{"cuMemcpyDtoHAsync_v2", objs.HandleCuMemcpyDtohAsync},
+    {"cuMemcpyDtoH", objs.HandleCuMemcpyDtoh},
+		{"cuMemcpyDtoHAsync", objs.HandleCuMemcpyDtohAsync},
+    {"cuMemcpyDtoHAsync_v2_ptsz", objs.HandleCuMemcpyDtoh},
+		{"cuMemcpyDtoH_v2_ptds", objs.HandleCuMemcpyDtohAsync},
+    // sync stream
 		{"cuStreamSynchronize", objs.HandleCuStreamSync},
+    {"cuStreamSynchronize_ptsz", objs.HandleCuStreamSync},
+    // Sync ctx
+    {"cuCtxSynchronize", objs.HandleCuCtxSync},
+    {"cuCtxSynchronize_v2", objs.HandleCuCtxSync},
 	}
 
 	functions_exit := []struct {
@@ -67,6 +86,9 @@ func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, e
 		prog *ebpf.Program
 	}{
 		{"cuStreamSynchronize", objs.HandleCuStreamSynchronizeRet},
+    {"cuStreamSynchronize_ptsz", objs.HandleCuStreamSynchronizeRet},
+    {"cuCtxSynchronize", objs.HandleCuCtxSyncRet},
+    {"cuCtxSynchronize_v2", objs.HandleCuCtxSyncRet},
 	}
 
 	for _, fn := range functions_entry {
