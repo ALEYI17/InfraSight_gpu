@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/ALEYI17/InfraSight_gpu/bpf/cuda/gpuprint"
+	"github.com/ALEYI17/InfraSight_gpu/internal/config"
 	"github.com/ALEYI17/InfraSight_gpu/internal/grpc/pb"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
 	"github.com/ALEYI17/InfraSight_gpu/pkg/types"
@@ -24,7 +25,7 @@ type GpuprintLoader struct {
 	collectors []types.Gpu_collectors
 }
 
-func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, error) {
+func NewGpuprinterLoader( cfg *config.Programsconfig,collectors ...types.Gpu_collectors) (*GpuprintLoader, error) {
 
 	logger := logutil.GetLogger()
 	if err := rlimit.RemoveMemlock(); err != nil {
@@ -42,7 +43,7 @@ func NewGpuprinterLoader(collectors ...types.Gpu_collectors) (*GpuprintLoader, e
 		Objs: &objs,
 	}
 
-	ex, err := link.OpenExecutable("/usr/lib/wsl/drivers/nvmdi.inf_amd64_c2d1126d336032b3/libcuda.so.1.1")
+	ex, err := link.OpenExecutable(cfg.CudaLibraryPath)
 	if err != nil {
 		logger.Error("error", zap.Error(err))
 		gput.Close()

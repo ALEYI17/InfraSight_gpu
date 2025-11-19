@@ -15,11 +15,12 @@ type Programsconfig struct {
 	Serverport     string
 	PrometheusPort string
 	Nodename       string
+  CudaLibraryPath  string
 }
 
 func LoadConfig() *Programsconfig {
 	logger := logutil.GetLogger()
-	var tracer, serverAddr, serverPort, prometheusPort string
+	var tracer, serverAddr, serverPort, prometheusPort, cudaLibPath  string
 	flag.StringVar(&tracer, "tracer", "", "Comma-separated list of eBPF probes to enable (e.g. 'execve,open')")
 
 	flag.StringVar(&serverAddr, "server-addr", "", "gRPC server address (e.g. 127.0.0.1)")
@@ -27,6 +28,8 @@ func LoadConfig() *Programsconfig {
 	flag.StringVar(&serverPort, "server-port", "", "gRPC server port (e.g. 50051)")
 
 	flag.StringVar(&prometheusPort, "prometheus-port", "", "prometheus scrape port (e.g. 9090)")
+
+  flag.StringVar(&cudaLibPath, "cuda-lib", "", "Path to libcuda.so on the host")
 
 	flag.Parse()
 
@@ -79,11 +82,33 @@ func LoadConfig() *Programsconfig {
 		probeList[i] = strings.TrimSpace(probeList[i])
 	}
 
+  if cudaLibPath == ""{
+    cudaLibPath = os.Getenv("CUDA_LIB_PATH")
+  }
+
+  if cudaLibPath == "" {
+    common := []string{
+        "/usr/lib/x86_64-linux-gnu/libcuda.so.1",
+        "/usr/local/cuda/compat/libcuda.so.1",
+    }
+    for _, p := range common {
+        if _, err := os.Stat(p); err == nil {
+            cudaLibPath = p
+            break
+        }
+    }
+  }
+
+  if cudaLibPath == ""{
+    logger.Fatal("Libcuda.so not found")
+  }
+
 	return &Programsconfig{
 		EnableProbes:   probeList,
 		ServerAdress:   serverAddr,
 		Serverport:     serverPort,
 		PrometheusPort: prometheusPort,
 		Nodename:       nodeName,
+    CudaLibraryPath: cudaLibPath,
 	}
 }

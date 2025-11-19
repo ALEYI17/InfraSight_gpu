@@ -34,7 +34,7 @@ func main() {
 	var lds []types.Gpu_loaders
 
 	for _, program := range cfg.EnableProbes {
-		if loaderInstance, err := loaders.NewEbpfGpuLoaders(program); err == nil {
+		if loaderInstance, err := loaders.NewEbpfGpuLoaders(program,cfg); err == nil {
 			logger.Info("Loaded tracer:", zap.String("Loader", program))
 			defer loaderInstance.Close()
 			lds = append(lds, loaderInstance)
