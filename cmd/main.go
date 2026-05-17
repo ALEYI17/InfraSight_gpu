@@ -31,6 +31,16 @@ func main() {
 
 	cfg := config.LoadConfig()
 
+	logger.Info("Loaded configuration",
+		zap.Strings("EnableProbes", cfg.EnableProbes),
+		zap.String("ServerAdress", cfg.ServerAdress),
+		zap.String("Serverport", cfg.Serverport),
+		zap.String("PrometheusPort", cfg.PrometheusPort),
+		zap.String("Nodename", cfg.Nodename),
+		zap.String("CudaLibraryPath", cfg.CudaLibraryPath),
+		zap.Duration("TimeWindow", cfg.TimeWindow),
+	)
+
 	var lds []types.Gpu_loaders
 
 	for _, program := range cfg.EnableProbes {

@@ -14,7 +14,7 @@ func NewEbpfGpuLoaders(programs string, cfg *config.Programsconfig) (types.Gpu_l
 
 	switch programs {
 	case types.LoaderFingerprint:
-		c1 := aggregator.NewGPUAggregator(2 * time.Second)
+		c1 := aggregator.NewGPUAggregator(cfg.TimeWindow)
 		c2 := timeserie.NewTimeSeriesCollector(5 * time.Second)
 		return NewGpuprinterLoader(cfg,c1, c2)
 	default:

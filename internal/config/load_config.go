@@ -3,7 +3,9 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ALEYI17/InfraSight_gpu/pkg/logutil"
 	"go.uber.org/zap"
@@ -15,12 +17,14 @@ type Programsconfig struct {
 	Serverport     string
 	PrometheusPort string
 	Nodename       string
-  CudaLibraryPath  string
+  CudaLibraryPath string
+	TimeWindow 			time.Duration
 }
 
 func LoadConfig() *Programsconfig {
 	logger := logutil.GetLogger()
-	var tracer, serverAddr, serverPort, prometheusPort, cudaLibPath  string
+	var tracer, serverAddr, serverPort, prometheusPort, cudaLibPath, timeWindow  string
+
 	flag.StringVar(&tracer, "tracer", "", "Comma-separated list of eBPF probes to enable (e.g. 'execve,open')")
 
 	flag.StringVar(&serverAddr, "server-addr", "", "gRPC server address (e.g. 127.0.0.1)")
@@ -30,6 +34,8 @@ func LoadConfig() *Programsconfig {
 	flag.StringVar(&prometheusPort, "prometheus-port", "", "prometheus scrape port (e.g. 9090)")
 
   flag.StringVar(&cudaLibPath, "cuda-lib", "", "Path to libcuda.so on the host")
+
+	flag.StringVar(&timeWindow, "time-window", "", "Time window for the aggregator logic")
 
 	flag.Parse()
 
@@ -103,6 +109,17 @@ func LoadConfig() *Programsconfig {
     logger.Fatal("Libcuda.so not found")
   }
 
+	if timeWindow == ""{
+		timeWindow = "2"
+	}
+
+	window,err:= strconv.ParseInt(timeWindow,10,64)
+	if err !=nil{
+		window = 2
+	}
+
+	duration := time.Duration(window) * time.Second
+
 	return &Programsconfig{
 		EnableProbes:   probeList,
 		ServerAdress:   serverAddr,
@@ -110,5 +127,6 @@ func LoadConfig() *Programsconfig {
 		PrometheusPort: prometheusPort,
 		Nodename:       nodeName,
     CudaLibraryPath: cudaLibPath,
+		TimeWindow: duration,
 	}
 }
