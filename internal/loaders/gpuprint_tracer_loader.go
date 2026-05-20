@@ -112,6 +112,14 @@ func NewGpuprinterLoader( cfg *config.Programsconfig,collectors ...types.Gpu_col
 		logger.Info("attached uretprobe", zap.String("function", fn.name))
 	}
 
+  tp, err := link.Tracepoint("syscalls", "sys_enter_ioctl", objs.WatchdogIoctl,nil)
+	if err != nil {
+		logger.Warn("failed to attach ioctl tracepoint", zap.Error(err))
+	}else{
+		gput.Up = append(gput.Up, tp)
+		logger.Info("attached ioctl tracepoint")
+	}
+
 	rb, err := ringbuf.NewReader(objs.GpuRingbuf)
 	if err != nil {
 		logger.Error("error", zap.Error(err))
@@ -155,6 +163,14 @@ func (gt *GpuprintLoader) Run(ctx context.Context, nodeName string) <-chan *pb.G
 			}
 		}(c)
 	}
+
+	watchdog := NewWatchdogCollector(gt.Objs)
+
+	go func(){
+		for alert := range watchdog.Run(ctx){
+			logger.Warn("WATCHDOG: bypass detected — GPU activity outside system libcuda", zap.Uint32("pid", alert.Pid))
+		}
+	}()
 
 	go func() {
 

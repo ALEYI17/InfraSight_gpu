@@ -65,6 +65,13 @@ type GpuprintGpuStreamEventT struct {
 	DeltaNs   uint64
 }
 
+type GpuprintIoctlWatchdogEventT struct {
+	_              structs.HostLayout
+	IoctlHitCount  uint64
+	UprobeHitCount uint64
+	FirstSeenTime  uint64
+}
+
 // LoadGpuprint returns the embedded CollectionSpec for Gpuprint.
 func LoadGpuprint() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_GpuprintBytes)
@@ -117,6 +124,7 @@ type GpuprintProgramSpecs struct {
 	HandleCuMemcpyHtodAsync      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod_async"`
 	HandleCuStreamSync           *ebpf.ProgramSpec `ebpf:"handle_cuStreamSync"`
 	HandleCuStreamSynchronizeRet *ebpf.ProgramSpec `ebpf:"handle_cuStreamSynchronize_ret"`
+	WatchdogIoctl                *ebpf.ProgramSpec `ebpf:"watchdog_ioctl"`
 }
 
 // GpuprintMapSpecs contains maps before they are loaded into the kernel.
@@ -124,6 +132,7 @@ type GpuprintProgramSpecs struct {
 // It can be passed ebpf.CollectionSpec.Assign.
 type GpuprintMapSpecs struct {
 	GpuRingbuf        *ebpf.MapSpec `ebpf:"gpu_ringbuf"`
+	IoctlWatchdogMap  *ebpf.MapSpec `ebpf:"ioctl_watchdog_map"`
 	StartEventsStream *ebpf.MapSpec `ebpf:"start_events_stream"`
 }
 
@@ -135,6 +144,7 @@ type GpuprintVariableSpecs struct {
 	Unused2 *ebpf.VariableSpec `ebpf:"unused2"`
 	Unused3 *ebpf.VariableSpec `ebpf:"unused3"`
 	Unused4 *ebpf.VariableSpec `ebpf:"unused4"`
+	Unused5 *ebpf.VariableSpec `ebpf:"unused5"`
 }
 
 // GpuprintObjects contains all objects after they have been loaded into the kernel.
@@ -158,12 +168,14 @@ func (o *GpuprintObjects) Close() error {
 // It can be passed to LoadGpuprintObjects or ebpf.CollectionSpec.LoadAndAssign.
 type GpuprintMaps struct {
 	GpuRingbuf        *ebpf.Map `ebpf:"gpu_ringbuf"`
+	IoctlWatchdogMap  *ebpf.Map `ebpf:"ioctl_watchdog_map"`
 	StartEventsStream *ebpf.Map `ebpf:"start_events_stream"`
 }
 
 func (m *GpuprintMaps) Close() error {
 	return _GpuprintClose(
 		m.GpuRingbuf,
+		m.IoctlWatchdogMap,
 		m.StartEventsStream,
 	)
 }
@@ -176,6 +188,7 @@ type GpuprintVariables struct {
 	Unused2 *ebpf.Variable `ebpf:"unused2"`
 	Unused3 *ebpf.Variable `ebpf:"unused3"`
 	Unused4 *ebpf.Variable `ebpf:"unused4"`
+	Unused5 *ebpf.Variable `ebpf:"unused5"`
 }
 
 // GpuprintPrograms contains all programs after they have been loaded into the kernel.
@@ -192,6 +205,7 @@ type GpuprintPrograms struct {
 	HandleCuMemcpyHtodAsync      *ebpf.Program `ebpf:"handle_cuMemcpy_htod_async"`
 	HandleCuStreamSync           *ebpf.Program `ebpf:"handle_cuStreamSync"`
 	HandleCuStreamSynchronizeRet *ebpf.Program `ebpf:"handle_cuStreamSynchronize_ret"`
+	WatchdogIoctl                *ebpf.Program `ebpf:"watchdog_ioctl"`
 }
 
 func (p *GpuprintPrograms) Close() error {
@@ -206,6 +220,7 @@ func (p *GpuprintPrograms) Close() error {
 		p.HandleCuMemcpyHtodAsync,
 		p.HandleCuStreamSync,
 		p.HandleCuStreamSynchronizeRet,
+		p.WatchdogIoctl,
 	)
 }
 

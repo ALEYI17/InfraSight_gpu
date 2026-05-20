@@ -59,12 +59,25 @@ struct gpu_stream_event_t{
   __u64 delta_ns;
 };
 
+struct ioctl_watchdog_event_t{
+  __u64 ioctl_hit_count;
+  __u64 uprobe_hit_count;
+  __u64 first_seen_time;
+};
+
 struct{
   __uint(type, BPF_MAP_TYPE_HASH);
   __type(key, __u64);
   __type(value, __u64);
   __uint(max_entries, 1024);
 } start_events_stream SEC(".maps");
+
+struct{
+  __uint(type, BPF_MAP_TYPE_PERCPU_HASH);
+  __type(key, __u32);
+  __type(value, struct ioctl_watchdog_event_t);
+  __uint(max_entries, 1024);
+} ioctl_watchdog_map SEC(".maps");
 
 struct
 {
@@ -77,6 +90,54 @@ const struct gpu_kernel_launch_event_t *unused __attribute__((unused));
 const struct gpu_memalloc_event_t *unused2 __attribute__((unused));
 const struct gpu_memcpy_event_t *unused3 __attribute__((unused));
 const struct gpu_stream_event_t *unused4 __attribute__((unused));
+const struct  ioctl_watchdog_event_t *unused5 __attribute__((unused));
+
+static __always_inline struct ioctl_watchdog_event_t * get_or_init_ioctl(__u32 pid){
+
+  struct ioctl_watchdog_event_t *e;
+
+  e = bpf_map_lookup_elem(&ioctl_watchdog_map,&pid);
+
+  if (e)
+    return e;
+  
+
+  struct ioctl_watchdog_event_t zero ={
+    .ioctl_hit_count = 0,
+    .uprobe_hit_count = 0,
+    .first_seen_time = bpf_ktime_get_ns()
+  };
+  bpf_map_update_elem(&ioctl_watchdog_map,&pid,&zero,BPF_NOEXIST);
+
+  return bpf_map_lookup_elem(&ioctl_watchdog_map,&pid);
+}
+
+static __always_inline int add_to_counter(__u32 pid, __u32 hit_type){
+
+  struct ioctl_watchdog_event_t *hit = get_or_init_ioctl(pid);
+
+  if(hit){
+    if (hit_type == UPROBE_HIT){
+      __sync_fetch_and_add(&hit->uprobe_hit_count,1);
+    }
+    else if(hit_type == IOCTL_HIT){
+      __sync_fetch_and_add(&hit->ioctl_hit_count,1);
+    }
+
+  }
+
+  return 0;
+}
+
+static __always_inline int
+is_nvidia_device(__u32 major, __u32 minor)
+{
+    if (major == NVIDIA_UVM_MAJOR)
+        return 1;
+    if (major == NVIDIA_MAJOR && minor != NVIDIA_MODESET_MINOR)
+        return 1;
+    return 0;
+}
 
 SEC("uprobe/cuLaunchKernel")
 int BPF_KPROBE(handle_cuLaunchkernel,
@@ -112,6 +173,7 @@ int BPF_KPROBE(handle_cuLaunchkernel,
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -134,6 +196,7 @@ int BPF_KPROBE(handle_cuMemAlloc, void **devptr, size_t bytesize){
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -158,6 +221,7 @@ int BPF_KPROBE(handle_cuMemcpy_htod, void **dst, const void *src, size_t bytesiz
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -181,6 +245,7 @@ int BPF_KPROBE(handle_cuMemcpy_dtoh, void *dst, void **src, size_t bytesize){
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -204,6 +269,7 @@ int BPF_KPROBE(handle_cuMemcpy_htod_async, void **dst, const void *src, size_t b
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -227,6 +293,7 @@ int BPF_KPROBE(handle_cuMemcpy_dtohAsync, void *dst, void **src, size_t bytesize
 
   bpf_ringbuf_submit(e,0);
 
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -271,6 +338,7 @@ int BPF_KRETPROBE(handle_cuStreamSynchronize_ret){
 
   bpf_ringbuf_submit(e, 0);
 
+  add_to_counter(e->pid,UPROBE_HIT);
   return 0;
 }
 
@@ -315,6 +383,44 @@ int BPF_KRETPROBE(handle_cuCtxSync_ret){
 
   bpf_ringbuf_submit(e, 0);
 
+  add_to_counter(e->pid, UPROBE_HIT);
   return 0;
 }
 
+
+SEC("tracepoint/syscalls/sys_enter_ioctl")
+int watchdog_ioctl(struct trace_event_raw_sys_enter *ctx){
+
+  __u32 pid = bpf_get_current_pid_tgid() >>32; 
+  __u64 ts = bpf_ktime_get_ns();
+
+  __u64 fd = (__u64)ctx->args[0];
+
+  struct task_struct *task = (void *)bpf_get_current_task();
+
+  struct fdtable *fdt    = BPF_CORE_READ(task, files, fdt);
+  if (!fdt)
+    return 0;
+
+  struct file **fd_array = BPF_CORE_READ(fdt,fd);
+  if (!fd_array)
+    return 0;
+
+  struct file *file = NULL;
+  __u64 fd_addr = (__u64)fd_array + (__u64)fd * sizeof(struct file *);
+  bpf_core_read(&file, sizeof(struct file *), (void *)fd_addr);
+  if (!file)
+    return 0;
+
+  dev_t rdev = BPF_CORE_READ(file, f_inode, i_rdev);
+
+  // kernel MINORBITS = 20
+  __u32 major = rdev >> 20;
+  __u32 minor = rdev & 0xfffff;
+
+  if (!is_nvidia_device(major, minor))
+    return 0;
+
+  add_to_counter(pid, IOCTL_HIT);
+  return 0;
+}

@@ -20,5 +20,11 @@
 
 #define DIR_HTOD 0
 #define DIR_DTOH 1
+
+#define IOCTL_HIT  20
+#define UPROBE_HIT 10
+#define NVIDIA_MAJOR       195
+#define NVIDIA_UVM_MAJOR   511
+#define NVIDIA_MODESET_MINOR 254  // exclude display
 #endif /* __COMMON_H__ */
 
