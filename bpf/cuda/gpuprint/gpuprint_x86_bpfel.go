@@ -124,6 +124,7 @@ type GpuprintProgramSpecs struct {
 	HandleCuMemcpyHtodAsync      *ebpf.ProgramSpec `ebpf:"handle_cuMemcpy_htod_async"`
 	HandleCuStreamSync           *ebpf.ProgramSpec `ebpf:"handle_cuStreamSync"`
 	HandleCuStreamSynchronizeRet *ebpf.ProgramSpec `ebpf:"handle_cuStreamSynchronize_ret"`
+	HandleProcessExit            *ebpf.ProgramSpec `ebpf:"handle_process_exit"`
 	WatchdogIoctl                *ebpf.ProgramSpec `ebpf:"watchdog_ioctl"`
 }
 
@@ -205,6 +206,7 @@ type GpuprintPrograms struct {
 	HandleCuMemcpyHtodAsync      *ebpf.Program `ebpf:"handle_cuMemcpy_htod_async"`
 	HandleCuStreamSync           *ebpf.Program `ebpf:"handle_cuStreamSync"`
 	HandleCuStreamSynchronizeRet *ebpf.Program `ebpf:"handle_cuStreamSynchronize_ret"`
+	HandleProcessExit            *ebpf.Program `ebpf:"handle_process_exit"`
 	WatchdogIoctl                *ebpf.Program `ebpf:"watchdog_ioctl"`
 }
 
@@ -220,6 +222,7 @@ func (p *GpuprintPrograms) Close() error {
 		p.HandleCuMemcpyHtodAsync,
 		p.HandleCuStreamSync,
 		p.HandleCuStreamSynchronizeRet,
+		p.HandleProcessExit,
 		p.WatchdogIoctl,
 	)
 }

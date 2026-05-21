@@ -117,7 +117,15 @@ func NewGpuprinterLoader( cfg *config.Programsconfig,collectors ...types.Gpu_col
 		logger.Warn("failed to attach ioctl tracepoint", zap.Error(err))
 	}else{
 		gput.Up = append(gput.Up, tp)
-		logger.Info("attached ioctl tracepoint")
+		logger.Info("attached tracepoint", zap.String("tracepoint", "syscalls/sys_enter_ioctl"))
+	}
+
+	tp, err = link.Tracepoint("sched", "sched_process_exit", objs.HandleProcessExit, nil)
+	if err != nil {
+		logger.Warn("failed to attach ioctl tracepoint", zap.Error(err))
+	}else{
+		gput.Up = append(gput.Up, tp)
+		logger.Info("attached tracepoint", zap.String("tracepoint", "sched/sched_process_exit"))
 	}
 
 	rb, err := ringbuf.NewReader(objs.GpuRingbuf)

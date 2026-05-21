@@ -130,11 +130,11 @@ static __always_inline int add_to_counter(__u32 pid, __u32 hit_type){
 }
 
 static __always_inline int
-is_nvidia_device(__u32 major, __u32 minor)
+is_nvidia_compute_device(__u32 major, __u32 minor)
 {
     if (major == NVIDIA_UVM_MAJOR)
         return 1;
-    if (major == NVIDIA_MAJOR && minor != NVIDIA_MODESET_MINOR)
+    if (major == NVIDIA_MAJOR && minor < NVIDIA_MODESET_MINOR)
         return 1;
     return 0;
 }
@@ -418,9 +418,17 @@ int watchdog_ioctl(struct trace_event_raw_sys_enter *ctx){
   __u32 major = rdev >> 20;
   __u32 minor = rdev & 0xfffff;
 
-  if (!is_nvidia_device(major, minor))
+  if (!is_nvidia_compute_device(major, minor))
     return 0;
 
   add_to_counter(pid, IOCTL_HIT);
+  return 0;
+}
+
+SEC("tracepoint/sched/sched_process_exit")
+int handle_process_exit(struct trace_event_raw_sched_process_template *ctx){
+  
+  __u32 pid = bpf_get_current_pid_tgid() >> 32;
+  bpf_map_delete_elem(&ioctl_watchdog_map, &pid);
   return 0;
 }
