@@ -322,7 +322,8 @@ int BPF_KRETPROBE(handle_cuStreamSynchronize_ret){
   e = bpf_ringbuf_reserve(&gpu_ringbuf, sizeof(*e), 0);
     if (!e) return 0;
   
-  e->pid = id >> 32;
+  __u32 pid = id >> 32;
+  e->pid = pid;
 
   e->start_time = *tsp;
 
@@ -338,7 +339,7 @@ int BPF_KRETPROBE(handle_cuStreamSynchronize_ret){
 
   bpf_ringbuf_submit(e, 0);
 
-  add_to_counter(e->pid,UPROBE_HIT);
+  add_to_counter(pid,UPROBE_HIT);
   return 0;
 }
 
@@ -367,7 +368,8 @@ int BPF_KRETPROBE(handle_cuCtxSync_ret){
   e = bpf_ringbuf_reserve(&gpu_ringbuf, sizeof(*e), 0);
     if (!e) return 0;
   
-  e->pid = id >> 32;
+  __u32 pid = id>> 32;
+  e->pid = pid;
 
   e->start_time = *tsp;
 
@@ -383,7 +385,7 @@ int BPF_KRETPROBE(handle_cuCtxSync_ret){
 
   bpf_ringbuf_submit(e, 0);
 
-  add_to_counter(e->pid, UPROBE_HIT);
+  add_to_counter(pid, UPROBE_HIT);
   return 0;
 }
 
